@@ -1,7 +1,7 @@
-INPUT_DIR="/home/ec2-user/na12878"
-OUTPUT_DIR="/home/ec2-user/na12878/alignment/pacbioccs/vcf"
+INPUT_DIR="$1"
+OUTPUT_DIR="$1/alignment/pacbioccs/vcf"
 BIN_VERSION="0.8.0"
-SCAFF=$1
+SCAFF=$2
 sudo docker run \
   -v "${INPUT_DIR}":"/input" \
   -v "${OUTPUT_DIR}:/output" \

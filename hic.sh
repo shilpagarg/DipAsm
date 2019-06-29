@@ -1,7 +1,8 @@
 HICPATH=$1
 RAGOO=$2
 SAMPLE=$3
-SCRIPTPATH=${0%/*}
+SCRIPTPATH=$(readlink -f $0)
+SCRIPTPATH=${SCRIPTPATH%/*}
 FILTER=$SCRIPTPATH/mapping_pipeline/filter_five_end.pl
 COMBINER=$SCRIPTPATH/mapping_pipeline/two_read_bam_combiner.pl
 source activate pipeline
@@ -27,7 +28,7 @@ ls alignment/hic/*fixed.bam | parallel 'samtools reheader -P alignment/hic/heade
 
 input=''
 for i in alignment/hic/*RG.bam; do input=$input' INPUT='$i ; done
-\time -v java -Xmx256G -jar tools/picard.jar MergeSamFiles $input OUTPUT=alignment/hic/hic.ragoo.bam USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT 2> merge.hic2ragoo.log
+\time -v java -Xmx256G -jar $SCRIPTPATH/tools/picard.jar MergeSamFiles $input OUTPUT=alignment/hic/hic.ragoo.bam USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT 2> merge.hic2ragoo.log
 
 # In case data size is too large, check --hash-table-size and --sort-buffer-size
 \time -v sambamba markdup -r -t 72 alignment/hic/hic.ragoo.bam alignment/hic/hic.ragoo.md.bam 2> hic.markdup.log

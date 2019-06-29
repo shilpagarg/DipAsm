@@ -1,9 +1,12 @@
 PBPATH=$1
 RAGOO=$2
 SAMPLE=$3
-SCRIPTPATH=${0%/*}
+SCRIPTPATH=$(readlink -f $0)
+SCRIPTPATH=${SCRIPTPATH%/*}
+PWD=`pwd`
 source activate pipeline
 export SCRIPTPATH
+export PWD
 
 samtools faidx $RAGOO
 
@@ -15,14 +18,14 @@ samtools index -@96 alignment/pacbioccs/pacbioccs.ragoo.bam
 [ -d split ] || mkdir -p split
 
 echo Splitting PacBioCCS alignment
-cut -d$'\t' -f1 ${RAGOO}.fai | parallel -j4 'samtools view -@16 -b pacbioccs.ragoo.bam {} > alignment/pacbioccs/split/pacbioccs.ragoo.{}.bam'
+cut -d$'\t' -f1 ${RAGOO}.fai | parallel -j4 'samtools view -@16 -b alignment/pacbioccs/pacbioccs.ragoo.bam {} > alignment/pacbioccs/split/pacbioccs.ragoo.{}.bam'
 cut -d$'\t' -f1 ${RAGOO}.fai | parallel -j4 'samtools index -@16 alignment/pacbioccs/split/pacbioccs.ragoo.{}.bam'
 
 [ -d vcf ] || mkdir -p vcf
 
 echo DeepVariant.....
 
-cut -d$'\t' -f1 ${RAGOO}.fai | parallel -j5 './dv.sh {}'
+cut -d$'\t' -f1 ${RAGOO}.fai | parallel -j5 '$SCRIPTPATH/dv.sh $PWD {}'
 
 ls alignment/pacbioccs/vcf/*gz | parallel 'bgzip -cd {} > {.}'
 ls alignment/pacbioccs/vcf/*vcf | parallel "grep -E '^#|0/0|1/1|0/1|1/0|0/2|2/0' {} > {.}.filtered.vcf"
