@@ -12,7 +12,7 @@ export FILTER
 export COMBINER
 
 echo BWA indexing
-#\time -v bwa index -a bwtsw $RAGOO 2> bwa.index.log
+\time -v bwa index -a bwtsw $RAGOO 2> bwa.index.log
 
 echo Hi-C data aligning.....
 ls $HICPATH/*.f*q | \time -v parallel -j2 "bwa mem -t 40 -R '@RG\tSM:$SAMPLE\tID:$SAMPLE' $RAGOO {} | perl $FILTER | samtools view -@12 -Sb - > alignment/hic/{/.}.filtered.bam" 2> hic.bwa.mem.log
