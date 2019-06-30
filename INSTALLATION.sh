@@ -1,5 +1,5 @@
 #!/bin/sh
-
+# installation of tools not on conda
 [ -d tools ] || mkdir -p tools
 cd tools
 git clone https://github.com/malonge/RaGOO.git
