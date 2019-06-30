@@ -1,3 +1,5 @@
+# Phasing pipeline using hapcut2 and whatshap
+
 HIC=alignment/hic/split
 VCF=alignment/pacbioccs/vcf
 SAMPLE=$1
