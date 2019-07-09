@@ -55,3 +55,22 @@ bgzip -cd hg38.fa.gz > hg38.fa
 for i in {1..22} X Y ; do samtools faidx hg38.fa chr$i >> grch38.fa ; done
 cd ../
 
+# Ground Truth
+tagged bams: ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/NA12878/PacBio_SequelII_CCS_11kb/HG001.SequelII.pbmm2.hs37d5.whatshap.haplotag.RTG.trio.bam
+
+#ref-based
+hg19: ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/reference/human_g1k_v37.fasta.gz
+phased calls: wget -O {output} ftp://platgene_ro:""@ussd-ftp.illumina.com/2016-1.0/hg19/small_variants/NA12878/NA12878.vcf.gz
+
+
+# Input data for hg002
+PacBio CCS: ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/AshkenazimTrio/HG002_NA24385_son/PacBio_CCS_15kb/alignment/
+HiC : from arima genomics, pgp1/arimagenomics/GM24385.AJ.*.fastq.gz
+grch38 for ragoo: hg38.fa as above
+peregrine contigs: hg002/analysis_withoutsalsa/peregrine/p_ctg_cns_p1.fa, hg002/analysis_withoutsalsa/peregrine/p_ctg_cns_p2.fa
+grch38 for ref-based: ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA_000001405.15_GRCh38/seqs_for_alignment_pipelines.ucsc_ids/GCA_000001405.15_GRCh38_no_alt_plus_hs38d1_analysis_set.fna.gz
+
+Ground Truth comparison:
+phased vcf: ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/release/AshkenazimTrio/HG002_NA24385_son/latest/GRCh38/HG002_GRCh38_GIAB_highconf_CG-Illfb-IllsentieonHC-Ion-10XsentieonHC-SOLIDgatkHC_CHROM1-22_v.3.3.2_highconf_triophased.vcf.gz
+haplotgged bams: partitioned from Jason and Chai, peregrine + trio
+
