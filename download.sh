@@ -55,13 +55,16 @@ bgzip -cd hg38.fa.gz > hg38.fa
 for i in {1..22} X Y ; do samtools faidx hg38.fa chr$i >> grch38.fa ; done
 cd ../
 
-# Ground Truth
+# Ground Truth for ragoo-based
 tagged bams: ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/NA12878/PacBio_SequelII_CCS_11kb/HG001.SequelII.pbmm2.hs37d5.whatshap.haplotag.RTG.trio.bam
 
-#ref-based
+#ref-based is on hg19
 hg19: ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/reference/human_g1k_v37.fasta.gz
 phased calls: wget -O {output} ftp://platgene_ro:""@ussd-ftp.illumina.com/2016-1.0/hg19/small_variants/NA12878/NA12878.vcf.gz
 
+# variants calls comparison from ragoo-based assemblies on grch38
+phased calls: ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/release/NA12878_HG001/latest/GRCh38/HG001_GRCh38_GIAB_highconf_CG-IllFB-IllGATKHC-Ion-10X-SOLID_CHROM1-X_v.3.3.2_highconf_PGandRTGphasetransfer.vcf.gz
+EEE calls: http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/data_collections/hgsv_sv_discovery/working/20181025_EEE_SV-Pop_1/VariantCalls_EEE_SV-Pop_1/EEE_SV-Pop_1.ALL.sites.20181204.vcf.gz
 
 # Input data for hg002
 PacBio CCS: ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/AshkenazimTrio/HG002_NA24385_son/PacBio_CCS_15kb/alignment/
