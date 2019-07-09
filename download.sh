@@ -56,7 +56,7 @@ for i in {1..22} X Y ; do samtools faidx hg38.fa chr$i >> grch38.fa ; done
 cd ../
 
 # Ground Truth for ragoo-based
-tagged bams: ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/NA12878/PacBio_SequelII_CCS_11kb/HG001.SequelII.pbmm2.hs37d5.whatshap.haplotag.RTG.trio.bam
+tagged bams: ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/NA12878/PacBio_SequelII_CCS_11kb/HG001_GRCh38/HG001_GRCh38.haplotag.RTG.trio.bam
 
 #ref-based is on hg19
 hg19: ftp://ftp-trace.ncbi.nih.gov/1000genomes/ftp/technical/reference/human_g1k_v37.fasta.gz
