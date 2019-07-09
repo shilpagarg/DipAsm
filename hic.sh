@@ -14,26 +14,29 @@ export COMBINER
 echo BWA indexing
 \time -v bwa index -a bwtsw $RAGOO 2> bwa.index.log
 
-echo Hi-C data aligning.....
-ls $HICPATH/*.f*q | \time -v parallel -j2 "bwa mem -t 40 -R '@RG\tSM:$SAMPLE\tID:$SAMPLE' $RAGOO {} | perl $FILTER | samtools view -@12 -Sb - > alignment/hic/{/.}.filtered.bam" 2> hic.bwa.mem.log
+echo Hi-C data aligning..... 
+# assume hic data is in one file with XX_R1.fastq and XX_R2.fastq
+[ -d $HICPATH/split1 ] || mkdir -p $HICPATH/split1
+[ -d $HICPATH/split2 ] || mkdir -p $HICPATH/split2
+[ -d alignment/hic/chunks1 ] || mkdir -p alignment/hic/chunks1
+[ -d alignment/hic/chunks2 ] || mkdir -p alignment/hic/chunks2
+[ -d alignment/hic/repaired ] || mkdir -p alignment/hic/repaired
+\time split -l 8000000 $HICPATH/*_R1.f*q $HICPATH/split1/ > $HICPATH/split1.log 2>&1 &
+\time split -l 8000000 $HICPATH/*_R2.f*q $HICPATH/split2/ > $HICPATH/split2.log 2>&1; wait
 
-echo Post-processing
-ls alignment/hic/*_1.filtered.bam | sed 's/_1.filtered.bam//g' | time -v parallel -j2 'perl $COMBINER {}_1.filtered.bam {}_2.filtered.bam samtools 10 | samtools view -@ 40 -bS -t ${RAGOO}.fai - | samtools sort -@ 40 -m3g -n - > {.}.combined.bam' 2> hic.combine.log
+\time ls $HICPATH/split1/ | parallel -j18 "bwa mem -t 40 -R '@RG\tSM:$SAMPLE\tID:$SAMPLE' -B 8 -M $RAGOO {} | samtools sort -@4 -m2g -O BAM -n > alignment/hic/chunks1/{/.}.nsort.bam" 2> hic.bwa.mem.1.log
+\time ls $HICPATH/split2/ | parallel -j18 "bwa mem -t 40 -R '@RG\tSM:$SAMPLE\tID:$SAMPLE' -B 8 -M $RAGOO {} | samtools sort -@4 -m2g -O BAM -n > alignment/hic/chunks2/{/.}.nsort.bam" 2> hic.bwa.mem.2.log
 
-ls alignment/hic/*combined.bam | \time -v parallel -j2 'samtools fixmate -@40 {} - | samtools sort -@40 -m3g - > {.}.fixed.bam' 2> hic.fixmate.log
+ls alignment/hic/chunks1/*.nsort.bam | sed 's/alignment\/hic\/chunks1\///g' | parallel 'python ~/tools/HapCUT2/utilities/HiC_repair.py  -b1 alignment/hic/chunks1/{} -b2 alignment/hic/chunks2/{} -o alignment/hic/repaired/{.}.repaired.bam'
+samtools merge -@72 alignment/hic/hic.repaired.bam alignment/hic/repaired/*
 
-ONE=`ls alignment/hic/{/.}.filtered.bam | head -1`
-samtools view -H $ONE | grep -v '^@PG' > alignment/hic/header
-ls alignment/hic/*fixed.bam | parallel 'samtools reheader -P alignment/hic/header {} > {.}.RG.bam'
+samtools fixmate -@ 72 alignment/hic/hic.repaired.bam - | samtools sort -@ 72 -m 2g - > alignment/hic/hic.fix.sort.bam
+samtools index -@ 72 alignment/hic/hic.fix.sort.bam 
+\time ~/tools/biobambam2/2.0.87-release-20180301132713/x86_64-etch-linux-gnu/bin/bammarkduplicates2 I=alignment/hic/hic.fix.sort.bam  O=alignment/hic/hic.fix.sort.md.bam  M=markdup.metrics markthreads=72 rmdup=1 index=1 2> hic.markdup.log
 
-input=''
-for i in alignment/hic/*RG.bam; do input=$input' INPUT='$i ; done
-\time -v java -Xmx256G -jar $SCRIPTPATH/tools/picard.jar MergeSamFiles $input OUTPUT=alignment/hic/hic.ragoo.bam USE_THREADING=TRUE ASSUME_SORTED=TRUE VALIDATION_STRINGENCY=LENIENT 2> merge.hic2ragoo.log
+[ -d alignment/hic/split ] || mkdir -p alignment/hic/split
 
-# In case data size is too large, check --hash-table-size and --sort-buffer-size
-\time -v sambamba markdup -r -t 72 alignment/hic/hic.ragoo.bam alignment/hic/hic.ragoo.md.bam 2> hic.markdup.log
+parallel -j6 'samtools view -@12 -b alignment/hic/hic.fix.sort.md.bam {} > alignment/hic/split/hic.{}.bam' ::: `cut -d$'\t' -f1 ${RAGOO}.fai`
 
-echo Splitting Hi-C processed alignments
-[ -d split ] || mkdir -p split
-parallel -j6 'samtools view -b -@12 alignment/hic/hic.ragoo.md.bam {} > alignment/hic/split/hic.ragoo.{}.bam' ::: `cut -d$'\t' -f1 ${RAGOO}.fai`
+
 
