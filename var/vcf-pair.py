@@ -32,6 +32,15 @@ for line in mergedVCF:
         sys.stdout.write('\t'.join(tokens[:-3])+'\tGT\t0|1\n')
     elif gt1 == './.' and gt2 == '1/1':
         sys.stdout.write('\t'.join(tokens[:-3])+'\tGT\t0|1\n')
+    elif gt1 == '0/0' and gt2 == '0/0':
+        sys.stdout.write('\t'.join(tokens[:-3])+'\tGT\t0/0\n')
+    elif gt1 == '0/0' and gt2 == './.':
+        sys.stdout.write('\t'.join(tokens[:-3])+'\tGT\t0/0\n')
+    elif gt1 == './.' and gt2 == '0/0':
+        sys.stdout.write('\t'.join(tokens[:-3])+'\tGT\t0/0\n')
+    elif gt1 == '1/1' and gt2 == '1/1':
+        sys.stdout.write('\t'.join(tokens[:-3])+'\tGT\t1|1\n')
+    
     #else:
         #sys.stderr.write(line+'\tDONT WRITE\n')
 
