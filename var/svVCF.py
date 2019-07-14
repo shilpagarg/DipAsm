@@ -25,7 +25,7 @@ def convertRecord(line, min_length, remove):
 	ALT = tokens[4]
 	if len(REF) == 1 and len(ALT) > 1:
 		tokens[3] = 'N'
-		tokens[4] = '<INS>'
+		#tokens[4] = '<INS>'
 		SVLEN = len(ALT) - 1
 		if SVLEN < min_length:
 			return None
@@ -33,8 +33,8 @@ def convertRecord(line, min_length, remove):
 		INFO = 'SVTYPE=INS;SVLEN=%d;END=%d'%(SVLEN,END)
 		tokens[7] = INFO
 	elif len(REF) > 1 and len(ALT) == 1:
-		tokens[3] = 'N'
-		tokens[4] = '<DEL>'
+		#tokens[3] = 'N'
+		tokens[4] = 'N'
 		SVLEN = len(REF) - 1
 		if SVLEN < min_length:
 			return None
@@ -44,7 +44,7 @@ def convertRecord(line, min_length, remove):
 	else:
 		if remove:
 			return None
-
+	tokens[6] = 'PASS'
 	line = '\t'.join(tokens)
 	return line
 
@@ -78,3 +78,4 @@ if __name__ == '__main__':
 		                help = 'Only out put SVs.')
 	args = parser.parse_args()
 	convertVCF(args.vcf, args.min_length, args.remove_snvs)
+
