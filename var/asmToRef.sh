@@ -1,45 +1,36 @@
 if [ $# != 3 ] ; then
-echo "USAGE: $0 DIPASMPATH REF SAMPLE"
+echo "USAGE: $0 CHR  REF SAMPLE"
 exit 1;
 fi
 
-DIPASM=$(readlink -f $1)
+CHR=$1
 REF=$(readlink -f $2)
 SAMPLE=$3
 OUTDIR=${SAMPLE}_output
 SCRIPTPATH=$(readlink -f $0)
 SCRIPTPATH=${SCRIPTPATH%/*}
-
+t=$'\t'
 export OUTDIR
 export DIPASM
 
 mkdir $OUTDIR
 
-#TODO: maybe don't consider scaffolds, but chr ones only 
-#echo Concatenating...
-#for i in $DIPASM/*H1.fa; do sed -e "s/>/>$(basename $i .fa)\./g" $i >> $OUTDIR/H1.fa; done
-#for i in $DIPASM/*H2.fa; do sed -e "s/>/>$(basename $i .fa)\./g" $i >> $OUTDIR/H2.fa; done
-
 #echo mapping H1.fa/H2.fa to $REF
 #TODO correct the dipasm file name; take care of reference chromosome name and the expression in grep
-minimap2 --paf-no-hit -cxasm5 --cs -r2k -t20 ref/chr${CHR}.fasta $DIPASM/${CHR}.H1.fasta | sort -k6,6 -k8,8n | ~/tools/paftools.js call -f ref/chr${CHR}.fasta - | grep -E "^#|^chr$CHR$t" | htsbox bgzip > $OUT/chr${CHR}.H1.vcf.gz
-minimap2 --paf-no-hit -cxasm5 --cs -r2k -t20 ref/chr${CHR}.fasta $DIPASM/${CHR}.H2.fasta | sort -k6,6 -k8,8n | ~/tools/paftools.js call -f ref/chr${CHR}.fasta - | grep -E "^#|^chr$CHR$t" | htsbox bgzip > $OUT/chr${CHR}.H2.vcf.gz
-tabix -p vcf $OUT/chr${CHR}.H1.vcf.gz
-tabix -p vcf $OUT/chr${CHR}.H2.vcf.gz
-#minimap2 --paf-no-hit -axasm5 --cs -r2k -t16 $REF $OUTDIR/H1.fa 2> $OUTDIR/H1.paf.log > $OUTDIR/H1.sam.gz &
-#minimap2 --paf-no-hit -axasm5 --cs -r2k -t16 $REF $OUTDIR/H2.fa 2> $OUTDIR/H2.paf.log > $OUTDIR/H2.sam.gz ; wait
+minimap2 --paf-no-hit -cxasm5 --cs -r2k -t36 ref/${CHR}.fasta dipasm/chr${CHR}_RaGOO-p_ctg_cns-H1.fa | sort -k6,6 -k8,8n | ~/tools/paftools.js call -f ref/${CHR}.fasta - | grep -E "^#|^$CHR$t" | htsbox bgzip > $OUTDIR/${CHR}.H1.vcf.gz
+minimap2 --paf-no-hit -cxasm5 --cs -r2k -t36 ref/${CHR}.fasta dipasm/chr${CHR}_RaGOO-p_ctg_cns-H2.fa | sort -k6,6 -k8,8n | ~/tools/paftools.js call -f ref/${CHR}.fasta - | grep -E "^#|^$CHR$t" | htsbox bgzip > $OUTDIR/${CHR}.H2.vcf.gz
+tabix -p vcf $OUTDIR/${CHR}.H1.vcf.gz
+tabix -p vcf $OUTDIR/${CHR}.H2.vcf.gz
 
-# sort SAM
-#echo sorting SAM
-#k8 $SCRIPTPATH/sam-flt.js $OUTDIR/H1.sam.gz | samtools sort -m4G -@4 -o $OUTDIR/H1.bam - &
-#k8 $SCRIPTPATH/sam-flt.js $OUTDIR/H2.sam.gz | samtools sort -m4G -@4 -o $OUTDIR/H2.bam - ; wait
-
-# "call" variants with naive mpileup
-#echo mpileup variant calling...
-#htsbox pileup -q5 -evcf $REF $OUTDIR/H1.bam $OUTDIR/H2.bam > $OUTDIR/asmToRef.merged.vcf
-
-# generate phased VCF
 echo Phasing...
-bcftools merge --force-samples $OUT/chr${CHR}.H1.vcf.gz  $OUT/chr${CHR}.H2.vcf.gz | sed 's/\.\/\./0\/0/g'>  $OUT/chr${CHR}.merged.vcf
-python $SCRIPTPATH/vcf-pair.py $OUTDIR/chr${CHR}.merged.vcf > $OUTDIR/chr${CHR}.phased.vcf
+bcftools merge --force-samples -m none -0 $OUTDIR/${CHR}.H1.vcf.gz  $OUTDIR/${CHR}.H2.vcf.gz > $OUTDIR/${CHR}.merged.vcf
+python $SCRIPTPATH/vcf-pair.py $OUTDIR/${CHR}.merged.vcf $SAMPLE > $OUTDIR/${CHR}.phased.vcf 
 
+mkdir $OUTDIR/compare
+echo comparing...
+whatshap compare --only-snvs --tsv-pairwise $OUTDIR/compare/compare.${CHR}.pw.tsv --longest-block-tsv $OUTDIR/compare/compare.${CHR}.block.tsv snvTruth/${CHR}.vcf $OUTDIR/${CHR}.phased.vcf > $OUTDIR/compare/compare.${CHR}.log 2>&1
+
+echo truevari
+bgzip -c $OUTDIR/${CHR}.phased.vcf > $OUTDIR/${CHR}.phased.vcf.gz
+tabix -p vcf $OUTDIR/${CHR}.phased.vcf.gz
+~/tools/truvari/truvari/truvari -f ref/${CHR}.fasta  -b svTruth/${CHR}.vcf --includebed svTruth/${CHR}.bed -o $OUTDIR/truvari_${CHR} --giabreport --passonly -r 1000 -p 0.00 -c $OUTDIR/${CHR}.phased.vcf.gz

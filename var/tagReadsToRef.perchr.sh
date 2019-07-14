@@ -19,6 +19,8 @@ echo Input tagged bam: $TAG
 echo Reference sequence: $REF
 echo All output will be at $OUT
 
+$SCRIPTPATH/largestBlock.tag.sh $CHR
+
 mkdir $OUT
 
 echo Extracting reads. will be stored at $OUT/${PREFIX}.H1.fastq, $OUT/${PREFIX}.H2.fastq
@@ -29,11 +31,11 @@ samtools fastq -@72 $OUT/${PREFIX}.notag.bam >> $OUT/${PREFIX}.H1.fastq &
 samtools fastq -@72 $OUT/${PREFIX}.notag.bam >> $OUT/${PREFIX}.H2.fastq ; wait
 
 mkdir $OUT/ref
-minimap2 -a -k 19 -O 5,56 -E 4,1 -B 5 -z 400,50 -r 2k --eqx --secondary=no -t72 -R "@RG\tID:$SAMPLE\tSM:$SAMPLE" $REF $OUT/${PREFIX}.H1.fastq 2>> $OUT/minimap2.log | samtools sort -@72 -m2g -O BAM -o $OUT/${PREFIX}.H1.ref.bam
-minimap2 -a -k 19 -O 5,56 -E 4,1 -B 5 -z 400,50 -r 2k --eqx --secondary=no -t72 -R "@RG\tID:$SAMPLE\tSM:$SAMPLE" $REF $OUT/${PREFIX}.H2.fastq 2>> $OUT/minimap2.log | samtools sort -@72 -m2g -O BAM -o $OUT/${PREFIX}.H2.ref.bam
-samtools index -@72 $OUT/${PREFIX}.H1.ref.bam &
-samtools index -@72 $OUT/${PREFIX}.H2.ref.bam ; wait
-
+minimap2 -a -k 19 -O 5,56 -E 4,1 -B 5 -z 400,50 -r 2k --eqx --secondary=no -t36 -R "@RG\tID:$SAMPLE\tSM:$SAMPLE" $REF $OUT/${PREFIX}.H1.fastq 2>> $OUT/minimap2.log | samtools sort -@36 -m2g -O BAM -o $OUT/${PREFIX}.H1.ref.bam
+minimap2 -a -k 19 -O 5,56 -E 4,1 -B 5 -z 400,50 -r 2k --eqx --secondary=no -t36 -R "@RG\tID:$SAMPLE\tSM:$SAMPLE" $REF $OUT/${PREFIX}.H2.fastq 2>> $OUT/minimap2.log | samtools sort -@36 -m2g -O BAM -o $OUT/${PREFIX}.H2.ref.bam
+samtools index -@36 $OUT/${PREFIX}.H1.ref.bam &
+samtools index -@36 $OUT/${PREFIX}.H2.ref.bam ; wait
+rm *fastq
 # Small variant calling
 mkdir $OUT/dvcalls
 cp $REF $OUT/ref/
@@ -46,12 +48,12 @@ mkdir $OUT/dvcalls/compare
 whatshap compare --only-snvs --tsv-pairwise $OUT/dvcalls/compare/compare.${CHR}.pw.tsv --longest-block-tsv $OUT/dvcalls/compare/compare.${CHR}.block.tsv $OUT/dvcalls/${PREFIX}.dv.phased.vcf $SNV > $OUT/dvcalls/compare/compare.${CHR}.log 2>&1
 
 # Structural variant calling
-samtools calmd -@72 -b $OUT/${PREFIX}.H1.ref.bam $OUT/ref/${REF##*/} > $OUT/${PREFIX}.H1.ref.calmd.bam 
-samtools calmd -@72 -b $OUT/${PREFIX}.H2.ref.bam $OUT/ref/${REF##*/} > $OUT/${PREFIX}.H2.ref.calmd.bam 
+samtools calmd -@36 -b $OUT/${PREFIX}.H1.ref.bam $OUT/ref/${REF##*/} > $OUT/${PREFIX}.H1.ref.calmd.bam 
+samtools calmd -@36 -b $OUT/${PREFIX}.H2.ref.bam $OUT/ref/${REF##*/} > $OUT/${PREFIX}.H2.ref.calmd.bam 
 mkdir $OUT/sniffles_vcf
 
-sniffles -m $OUT/${PREFIX}.H1.ref.calmd.bam  -t 72 -v $OUT/sniffles_vcf/${PREFIX}.H1.sniffles.vcf --genotype -s 3 --skip_parameter_estimation -n -1 > $OUT/sniffles_vcf/${PREFIX}.H1.sniffles.log 2>&1
-sniffles -m $OUT/${PREFIX}.H2.ref.calmd.bam  -t 72 -v $OUT/sniffles_vcf/${PREFIX}.H2.sniffles.vcf --genotype -s 3 --skip_parameter_estimation -n -1 > $OUT/sniffles_vcf/${PREFIX}.H2.sniffles.log 2>&1
+sniffles -m $OUT/${PREFIX}.H1.ref.calmd.bam  -t 36 -v $OUT/sniffles_vcf/${PREFIX}.H1.sniffles.vcf --genotype -s 3 --skip_parameter_estimation -n -1 > $OUT/sniffles_vcf/${PREFIX}.H1.sniffles.log 2>&1
+sniffles -m $OUT/${PREFIX}.H2.ref.calmd.bam  -t 36 -v $OUT/sniffles_vcf/${PREFIX}.H2.sniffles.vcf --genotype -s 3 --skip_parameter_estimation -n -1 > $OUT/sniffles_vcf/${PREFIX}.H2.sniffles.log 2>&1
 
 cat <(cat $OUT/sniffles_vcf/${PREFIX}.H1.sniffles.vcf  | grep "^#") <(cat $OUT/sniffles_vcf/${PREFIX}.H1.sniffles.vcf  | grep -vE "^#" | grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) | bgzip -c > $OUT/sniffles_vcf/${PREFIX}.H1.sniffles.vcf.gz
 cat <(cat $OUT/sniffles_vcf/${PREFIX}.H2.sniffles.vcf  | grep "^#") <(cat $OUT/sniffles_vcf/${PREFIX}.H2.sniffles.vcf  | grep -vE "^#" | grep 'DUP\|INS\|DEL' | sed 's/DUP/INS/g' | sort -k1,1 -k2,2g) | bgzip -c > $OUT/sniffles_vcf/${PREFIX}.H2.sniffles.vcf.gz
