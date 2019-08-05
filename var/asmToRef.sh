@@ -1,36 +1,35 @@
-if [ $# != 3 ] ; then
-echo "USAGE: $0 CHR  REF SAMPLE"
-exit 1;
-fi
-
-CHR=$1
+DIPASM=$(readlink -f $1)
 REF=$(readlink -f $2)
 SAMPLE=$3
-OUTDIR=${SAMPLE}_output
+CHR=$4
+OUT=${SAMPLE}_output
+SNVGT=$5
+SVGT=$6
+SVBED=$7
 SCRIPTPATH=$(readlink -f $0)
 SCRIPTPATH=${SCRIPTPATH%/*}
-t=$'\t'
-export OUTDIR
+
+export OUT
 export DIPASM
 
-mkdir $OUTDIR
+[ -d $OUT ] || mkdir -p $OUT
+t=$'\t'
+minimap2 --paf-no-hit -axasm5 --cs -r2k -t32 $REF $DIPASM/${CHR}-p_ctg_cns-H1.fa > $OUT/${CHR}.H1.sam
+minimap2 --paf-no-hit -axasm5 --cs -r2k -t32 $REF $DIPASM/${CHR}-p_ctg_cns-H2.fa > $OUT/${CHR}.H2.sam
 
-#echo mapping H1.fa/H2.fa to $REF
-#TODO correct the dipasm file name; take care of reference chromosome name and the expression in grep
-minimap2 --paf-no-hit -cxasm5 --cs -r2k -t36 ref/${CHR}.fasta dipasm/chr${CHR}_RaGOO-p_ctg_cns-H1.fa | sort -k6,6 -k8,8n | ~/tools/paftools.js call -f ref/${CHR}.fasta - | grep -E "^#|^$CHR$t" | htsbox bgzip > $OUTDIR/${CHR}.H1.vcf.gz
-minimap2 --paf-no-hit -cxasm5 --cs -r2k -t36 ref/${CHR}.fasta dipasm/chr${CHR}_RaGOO-p_ctg_cns-H2.fa | sort -k6,6 -k8,8n | ~/tools/paftools.js call -f ref/${CHR}.fasta - | grep -E "^#|^$CHR$t" | htsbox bgzip > $OUTDIR/${CHR}.H2.vcf.gz
-tabix -p vcf $OUTDIR/${CHR}.H1.vcf.gz
-tabix -p vcf $OUTDIR/${CHR}.H2.vcf.gz
+$SCRIPTPATH/sam-flt.js $OUT/${CHR}.H1.sam | samtools sort -m4G -@4 -O BAM -o $OUT/${CHR}.H1.flt.sort.bam - 
+$SCRIPTPATH/sam-flt.js $OUT/${CHR}.H2.sam | samtools sort -m4G -@4 -O BAM -o $OUT/${CHR}.H2.flt.sort.bam - 
 
-echo Phasing...
-bcftools merge --force-samples -m none -0 $OUTDIR/${CHR}.H1.vcf.gz  $OUTDIR/${CHR}.H2.vcf.gz > $OUTDIR/${CHR}.merged.vcf
-python $SCRIPTPATH/vcf-pair.py $OUTDIR/${CHR}.merged.vcf $SAMPLE > $OUTDIR/${CHR}.phased.vcf 
+htsbox pileup -q5 -evcf $REF $OUT/${CHR}.H1.flt.sort.bam | htsbox bgzip > $OUT/${CHR}.H1.vcf.gz
+htsbox pileup -q5 -evcf $REF $OUT/${CHR}.H2.flt.sort.bam | htsbox bgzip > $OUT/${CHR}.H2.vcf.gz
+tabix -p vcf $OUT/${CHR}.H1.vcf.gz
+tabix -p vcf $OUT/${CHR}.H2.vcf.gz
+bcftools merge --force-samples -m none $OUT/${CHR}.H1.vcf.gz $OUT/${CHR}.H2.vcf.gz > $OUT/${CHR}.merged.vcf
+python $SCRIPTPATH/vcf-pair.py $OUT/${CHR}.merged.vcf $SAMPLE > $OUT/${CHR}.phased.vcf
+mkdir [ -d $OUT/compare ] || mkdir -p $OUT/compare
+whatshap compare --tsv-pairwise $OUT/compare/compare.${CHR}.pw.tsv --longest-block-tsv $OUT/compare/compare.${CHR}.block.tsv --only-snvs $OUT/${CHR}.phased.vcf $SNVGT > $OUT/compare/compare.${CHR}.log 2>&1
 
-mkdir $OUTDIR/compare
-echo comparing...
-whatshap compare --only-snvs --tsv-pairwise $OUTDIR/compare/compare.${CHR}.pw.tsv --longest-block-tsv $OUTDIR/compare/compare.${CHR}.block.tsv snvTruth/${CHR}.vcf $OUTDIR/${CHR}.phased.vcf > $OUTDIR/compare/compare.${CHR}.log 2>&1
-
-echo truevari
-bgzip -c $OUTDIR/${CHR}.phased.vcf > $OUTDIR/${CHR}.phased.vcf.gz
-tabix -p vcf $OUTDIR/${CHR}.phased.vcf.gz
-~/tools/truvari/truvari/truvari -f ref/${CHR}.fasta  -b svTruth/${CHR}.vcf --includebed svTruth/${CHR}.bed -o $OUTDIR/truvari_${CHR} --giabreport --passonly -r 1000 -p 0.00 -c $OUTDIR/${CHR}.phased.vcf.gz
+python $SCRIPTPATH/svVCF.py $OUT/${CHR}.phased.vcf > $OUT/${CHR}.phased.sv.vcf
+bgzip -c $OUT/${CHR}.phased.sv.vcf > $OUT/${CHR}.phased.sv.vcf.gz
+tabix -p vcf $OUT/${CHR}.phased.sv.vcf.gz
+~/tools/truvari/truvari/truvari -f $REF -b $SVGT --includebed $SVBED -o $OUT/truvari_${CHR} --giabreport --passonly -r 1000 -p 0.00 -c $OUT/${CHR}.phased.sv.vcf.gz
