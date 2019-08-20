@@ -15,6 +15,8 @@ aws s3 sync s3://pgp1/pacbiocss/ ./
 # ftp://pgp1:djkfLsjr876f@ftp2.pacificbiosciences.com/PGP1_2_fastq.tar.gz
 cd ../
 
+pgp1 hirise: pgp1/final_exps/pgp1_hirise/ref/PGP1_scaffolds.fasta
+
 # For PGP1 Hi-C data
 mkdir hic
 cd hic
@@ -46,6 +48,8 @@ fastq-dump --split-files SRR6675327
 cd ../
 
 cd ../
+
+NA12878 hirise: na12878/hirise/final_assembly.fa
 
 # GRCh38 Reference
 mkdir ref
