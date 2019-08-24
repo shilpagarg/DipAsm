@@ -79,5 +79,6 @@ grch38 for ref-based: ftp://ftp.ncbi.nlm.nih.gov/genomes/all/GCA/000/001/405/GCA
 
 Ground Truth comparison:
 phased vcf: ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/release/AshkenazimTrio/HG002_NA24385_son/latest/GRCh38/HG002_GRCh38_GIAB_highconf_CG-Illfb-IllsentieonHC-Ion-10XsentieonHC-SOLIDgatkHC_CHROM1-22_v.3.3.2_highconf_triophased.vcf.gz
+SVs: ftp://ftp-trace.ncbi.nlm.nih.gov/giab/ftp/data/AshkenazimTrio/analysis/NIST_SVs_Integration_v0.6/
 haplotgged bams: partitioned from Jason and Chai, peregrine + trio
 
