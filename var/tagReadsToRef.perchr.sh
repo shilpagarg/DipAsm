@@ -20,8 +20,8 @@ minimap2 -a -k 19 -O 5,56 -E 4,1 -B 5 -z 400,50 -r 2k --eqx --secondary=no -t72 
 samtools index -@72 $OUT/${PREFIX}.H1.ref.bam &
 samtools index -@72 $OUT/${PREFIX}.H2.ref.bam ; wait
 
-samtools calmd -@72 -b $OUT/${PREFIX}.H1.ref.bam $REF > $OUT/${PREFIX}.H1.ref.calmd.bam
-samtools calmd -@72 -b $OUT/${PREFIX}.H2.ref.bam $REF > $OUT/${PREFIX}.H2.ref.calmd.bam
+samtools calmd -@72 -b $OUT/${PREFIX}.H1.ref.bam $OUT/ref/${REF##*/} > $OUT/${PREFIX}.H1.ref.calmd.bam 
+samtools calmd -@72 -b $OUT/${PREFIX}.H2.ref.bam $OUT/ref/${REF##*/} > $OUT/${PREFIX}.H2.ref.calmd.bam 
 
 [ -d $OUT/sniffles_vcf ] || mkdir -p $OUT/sniffles_vcf
 
@@ -38,4 +38,3 @@ bcftools merge --force-samples -m none -0 $OUT/sniffles_vcf/${PREFIX}.H1.sniffle
 python $SCRIPTPATH/vcf-pair.py $OUT/sniffles_vcf/${PREFIX}.sniffles.merged.vcf $SAMPLE > $OUT/sniffles_vcf/${PREFIX}.sniffles.phased.vcf
 bgzip -c $OUT/sniffles_vcf/${PREFIX}.sniffles.phased.vcf > $OUT/sniffles_vcf/${PREFIX}.sniffles.phased.vcf.gz
 tabix -p vcf $OUT/sniffles_vcf/${PREFIX}.sniffles.phased.vcf.gz
-
