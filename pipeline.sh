@@ -56,6 +56,8 @@ else
     REF=ref/${ASM##*/}
 fi
 
+# TODO change the assembly sequence name
+
 \time -v bwa index -a bwtsw $REF 2> bwa.index.log &
 $SCRIPTPATH/pacbioccs.sh $PBPATH $REF $SAMPLE 
 wait
@@ -63,7 +65,7 @@ wait
 $SCRIPTPATH/hic.sh $HICPATH $REF $SAMPLE
 
 $SCRIPTPATH/phase.sh $REF $SAMPLE &
-$SCRIPTPATH/phase.hic_longread/sh $REF $SAMPLE 
+$SCRIPTPATH/phase.hic_longread.sh $REF $SAMPLE 
 wait
 
 SCAFFOLDS=`cut -d$'\t' -f1 ${REF}.fai`

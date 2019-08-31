@@ -23,11 +23,10 @@ ls $HICPATH/*_2.f*q | parallel 'split -l 8000000 {} ~/split/split2/{/.}_ > ~/spl
 
 \time ls ~/split/split1/ | parallel -j12 "bwa mem -t 6 -R '@RG\tSM:$SAMPLE\tID:$SAMPLE' -B 8 -M $REF ~/split/split1/{} | samtools sort -@4 -m2g -O BAM -n > alignment/hic/chunks1/{/.}.nsort.bam" 2> hic.bwa.mem.1.log
 \time ls ~/split/split2/ | parallel -j12 "bwa mem -t 6 -R '@RG\tSM:$SAMPLE\tID:$SAMPLE' -B 8 -M $REF ~/split/split2/{} | samtools sort -@4 -m2g -O BAM -n > alignment/hic/chunks2/{/.}.nsort.bam" 2> hic.bwa.mem.2.log
-
+# For HiC_repair.py, manually change line:229, output str to 'wb', for compressed BAM output.
 my_func() {   echo python ~/tools/HapCUT2/utilities/HiC_repair.py  -b1 $1 -b2 $2 -o alignment/hic/repaired/${1##*/}.repaired.bam; }
 export -f my_func
 parallel --xapply my_func ::: alignment/hic/chunks1/*.nsort.bam ::: alignment/hic/chunks2/*.nsort.bam | parallel
-#ls alignment/hic/chunks1/*.nsort.bam | sed 's/alignment\/hic\/chunks1\///g' | parallel 'python ~/tools/HapCUT2/utilities/HiC_repair.py  -b1 alignment/hic/chunks1/{} -b2 alignment/hic/chunks2/{} -o alignment/hic/repaired/{.}.repaired.bam'
 samtools merge -@72 alignment/hic/hic.repaired.bam alignment/hic/repaired/*
 
 samtools fixmate -@ 72 alignment/hic/hic.repaired.bam - | samtools sort -@ 72 -m 2G - > alignment/hic/hic.fix.sort.bam

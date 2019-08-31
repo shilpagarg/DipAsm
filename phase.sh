@@ -34,4 +34,4 @@ done
 
 parallel 'bgzip -c largestBlock_vcf/pacbioccs.hic.{}.phased.largestBlock.vcf > largestBlock_vcf/pacbioccs.hic.{}.phased.largestBlock.vcf.gz' ::: $SCAFFOLDS
 parallel 'tabix -p vcf largestBlock_vcf/pacbioccs.hic.{}.phased.largestBlock.vcf.gz' ::: $SCAFFOLDS
-parallel 'whatshap haplotag --reference $REF largestBlock_vcf/pacbioccs.hic.{}.phased.largestBlock.vcf.gz alignment/pacbioccs/split/pacbioccs.{}.bam -o largestBlock_haplotagBAM/$SAMPLE.pacbioccs.hic.{}.largestBlock.haplotag.bam 2> largestBlock_haplotagBAM/haplotag.{}.log' ::: $SCAFFOLDS  2> haplotag.largestBlock.log
+parallel 'whatshap haplotag --reference $REF largestBlock_vcf/pacbioccs.hic.{}.phased.largestBlock.vcf.gz alignment/pacbioccs/split/pacbioccs.{}.bam -o largestBlock_haplotagBAM/${SAMPLE}.pacbioccs.hic.{}.largestBlock.haplotag.bam 2> largestBlock_haplotagBAM/haplotag.{}.log' ::: $SCAFFOLDS  2> haplotag.largestBlock.log

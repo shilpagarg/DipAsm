@@ -14,7 +14,7 @@ parallel 'samtools faidx $REF {} > ref/{}.fasta' ::: $SCAFFOLDS
 parallel 'samtools faidx ref/{}.fasta' ::: $SCAFFOLDS
 \time -v parallel 'extractHAIRS --bam $HIC/hic.{}.bam --hic 1 --VCF $VCF/pacbioccs.{}.filtered.vcf --out hapcut2Only/hic.{}.frag 2> hapcut2Only/extractHAIRS.{}.hic.log' ::: $SCAFFOLDS 2> hapcut2Only/extractHAIRS.hic.log
 
-\time -v parallel 'extractHAIRS --pacbio 1 --ref ragoo/{}.fasta --new_format 1 --bam $PB/pacbioccs.{}.bam --VCF $VCF/pacbioccs.{}.filtered.vcf --out hapcut2Only/pacbioccs.{}.frag 2> hapcut2Only/extractHAIRS.{}.pb.log' ::: $SCAFFOLDS  2> hapcut2Only/extractHAIRS.pb.log
+\time -v parallel 'extractHAIRS --pacbio 1 --ref ref/{}.fasta --new_format 1 --bam $PB/pacbioccs.{}.bam --VCF $VCF/pacbioccs.{}.filtered.vcf --out hapcut2Only/pacbioccs.{}.frag 2> hapcut2Only/extractHAIRS.{}.pb.log' ::: $SCAFFOLDS  2> hapcut2Only/extractHAIRS.pb.log
 
 parallel 'cat hapcut2Only/hic.{}.frag hapcut2Only/pacbioccs.{}.frag > hapcut2Only/hic_pacbioccs.{}.frag' ::: $SCAFFOLDS
 
