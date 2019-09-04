@@ -10,6 +10,13 @@ OUT=${SAMPLE}_dipcall
 
 echo Starting to run dipcall analysis for dipasm
 
+#TODO: add polishing steps if needed
+#pbmm2 align --sort -j 30 original/chr22_RaGOO-p_ctg_cns-H1.fa taggedReads/hg002.pacbioccs.chr22_RaGOO.HP1.fastq | samtools view -F 1796 - > alignment3/aln1.sam
+#pbmm2 align --sort -j 30 original/chr22_RaGOO-p_ctg_cns-H2.fa taggedReads/hg002.pacbioccs.chr22_RaGOO.HP2.fastq | samtools view -F 1796 - > alignment3/aln2.sam
+
+#racon -t 30 taggedReads/hg002.pacbioccs.chr22_RaGOO.HP1.fastq alignment3/aln1.sam original/chr22_RaGOO-p_ctg_cns-H1.fa > racon3/chr22_RaGOO.H1.racon2.fasta
+#racon -t 30 taggedReads/hg002.pacbioccs.chr22_RaGOO.HP2.fastq alignment3/aln2.sam original/chr22_RaGOO-p_ctg_cns-H2.fa > racon3/chr22_RaGOO.H2.racon2.fasta
+
 minimap2 --paf-no-hit -axasm5 --cs -r2k -t32 $REF $H1 > $OUT/H1.sam
 minimap2 --paf-no-hit -axasm5 --cs -r2k -t32 $REF $H2 > $OUT/H2.sam
 
