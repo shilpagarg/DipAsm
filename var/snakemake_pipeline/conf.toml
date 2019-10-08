@@ -1,0 +1,5 @@
+[[annotation]]
+file="path/to/hg19.repeatmasker.sorted.bed.gz"
+names=["repClass", "repFamily", "repName"]
+columns=[7, 8, 4]
+ops=["concat", "concat", "concat"]

@@ -1,0 +1,344 @@
+configfile: "config.yaml"
+
+
+rule all:
+    input:
+        expand("{eval}/pileup/{mode}/size_reps.png", eval=["truvari", "truvari_multimatch"], mode=["genome", "genome_perchr"]),
+        expand("{eval}/paftools/{mode}/size_reps.png", eval=["truvari", "truvari_multimatch"], mode=["genome"]),
+        expand("{eval}/svim_haploid/{rgt_rot_qgt_qot}/{mode}/size_reps.png", eval=["truvari", "truvari_multimatch"], rgt_rot_qgt_qot=["50_50_50_50", "100_100_2000_2000", "1000_1000_2000_2000"], mode=["genome", "genome_perchr"]),
+        expand("{eval}/svim_diploid/{rgt_rot_qgt_qot}_{med}/{mode}/size_reps.png", eval=["truvari", "truvari_multimatch"], rgt_rot_qgt_qot=["50_50_50_50", "100_100_2000_2000", "1000_1000_2000_2000"], med=[200], mode=["genome", "genome_perchr"]),
+        expand("coverage/assembly.H{hap}.cov.tsv", hap=["1.flt","1", "2.flt", "2"]),
+        "coverage/reads.cov.tsv"
+
+###########
+# GENERAL #
+###########
+
+wildcard_constraints:
+    chr="(\d+|genome)"
+
+
+rule sort_vcf:
+    input:
+        "{name}.vcf"
+    output:
+        temp("{name}.sorted.vcf")
+    shell:
+        "bcftools sort {input} > {output}"
+
+
+rule tabix:
+    input:
+        "{name}.vcf.gz"
+    output:
+        "{name}.vcf.gz.tbi"
+    shell:
+        "tabix -p vcf {input}"
+
+
+rule index_bam:
+    input:
+        "{name}.bam"
+    output:
+        "{name}.bam.bai"
+    shell:
+        "samtools index {input}"
+
+
+rule index_fasta:
+    input:
+        fasta = "{name}.fasta",
+    output:
+        mmi = "{name}.mmi",
+    shell:
+        "minimap2 -d {output.mmi} {input.fasta}"
+
+
+rule compute_coverage_assemblies:
+    input:
+        bam = "alignments/genome.H{hap}.sort.bam"
+    output:
+        "coverage/assembly.H{hap}.cov.tsv"
+    shell:
+        "samtools view -q 20 -b {input.bam} | bedtools genomecov -ibam stdin > {output}"
+
+
+rule compute_coverage_reads:
+    input:
+        bam = config["reads_bam"]
+    output:
+        "coverage/reads.cov.tsv"
+    shell:
+        "samtools view -q 20 -b {input.bam} | bedtools genomecov -ibam stdin > {output}"
+
+
+#########
+# ALIGN #
+#########
+
+# Generate alignment in SAM
+rule align_sam:
+    input:
+        reference = config["reference"]["dir"] + "{chr}.mmi",
+        fasta = config["assemblies"]["path"]
+    output:
+        log = "logs/{chr}.H{hap}.sam.log",
+        sam = "alignments/{chr}.H{hap}.sam"
+    threads: 16
+    shell:
+        "minimap2 --paf-no-hit -axasm5 --cs -r2k -t {threads} {input.reference} {input.fasta} 2> {output.log} > {output.sam}"
+
+
+# Generate alignment in PAF (-r2k for better long INDEL alignment)
+rule align_paf:
+    input:
+        reference = config["reference"]["dir"] + "{chr}.mmi",
+        fasta = config["assemblies"]["path"]
+    output:
+        log = "logs/{chr}.H{hap}.paf.log",
+        paf = "alignments/{chr}.H{hap}.paf"
+    threads: 16
+    shell:
+        "minimap2 --paf-no-hit -cxasm5 --cs -r2k -t {threads} {input.reference} {input.fasta} 2> {output.log} > {output.paf}"
+
+
+# Filter SAM
+rule filter_sam:
+    input:
+        "{name}.sam"
+    output:
+        "{name}.flt.sam"
+    shell:
+        config["tools"]["sam-flt"] + " {input} > {output}"
+
+
+# Sort SAM
+rule sort_sam:
+    input:
+        sam = "{name}.sam"
+    output:
+        bam = "{name}.sort.bam"
+    shell:
+        "samtools sort -m4G -@4 -o {output.bam} {input.sam}"
+
+
+########
+# CALL #
+########
+
+
+# Call variants with pileup
+rule call_pileup:
+    input:
+        reference = config["reference"]["dir"] + "{chr}.fasta",
+        bam = "alignments/{chr}.H{hap}.flt.sort.bam",
+        index = "alignments/{chr}.H{hap}.flt.sort.bam.bai"
+    output:
+        "calls/pileup/{chr}.H{hap}.raw.vcf.gz"
+    shell:
+        "htsbox pileup -q5 -evcf {input.reference} {input.bam} | bgzip -c > {output}"
+
+
+# Filter out small variants and set FILTER field to PASS because truvari requires it
+rule filter_pileup_and_paftools:
+    input:
+        "calls/{tool}/{chr}.H{hap}.raw.vcf.gz"
+    output:
+        "calls/{tool}/{chr}.H{hap}.vcf.gz"
+    shell:
+        "bcftools view -i 'STRLEN(REF)>19 | STRLEN(ALT)>19' {input} | awk 'OFS=\"\\t\" {{ if($1 ~ /^#/) {{ print $0 }} else {{ $7 = \"PASS\"; print $0 }} }}' | bgzip -c > {output}"
+
+
+rule call_svim:
+    input:
+        reference = config["reference"]["dir"] + "{chr}.fasta",
+        bam = "alignments/{chr}.H{hap}.flt.sort.bam",
+        index = "alignments/{chr}.H{hap}.flt.sort.bam.bai"
+    output:
+        "svim_hap{hap}/{chr}/{rgt}_{rot}_{qgt}_{qot}/variants.vcf"
+    params:
+        working_dir = "svim_hap{hap}/{chr}/{rgt}_{rot}_{qgt}_{qot}"
+    shell:
+        "svim-asm haploid {params.working_dir} {input.bam} {input.reference} --min_sv_size 20 \
+        --duplications_as_insertions --reference_gap_tolerance {wildcards.rgt} --reference_overlap_tolerance {wildcards.rot} \
+        --query_gap_tolerance {wildcards.qgt} --query_overlap_tolerance {wildcards.qot} --sample HG002.hap{wildcards.hap} --query_names"
+
+
+rule call_svim_diploid:
+    input:
+        reference = config["reference"]["dir"] + "{chr}.fasta",
+        bam1 = "alignments/{chr}.H1.flt.sort.bam",
+        index1 = "alignments/{chr}.H1.flt.sort.bam.bai",
+        bam2 = "alignments/{chr}.H2.flt.sort.bam",
+        index2 = "alignments/{chr}.H2.flt.sort.bam.bai"
+    output:
+        "svim_diploid/{chr}/{rgt}_{rot}_{qgt}_{qot}_{med}/variants.vcf"
+    params:
+        working_dir = "svim_diploid/{chr}/{rgt}_{rot}_{qgt}_{qot}_{med}"
+    shell:
+        "svim-asm diploid {params.working_dir} {input.bam1} {input.bam2} {input.reference} --min_sv_size 20 \
+        --duplications_as_insertions --reference_gap_tolerance {wildcards.rgt} --reference_overlap_tolerance {wildcards.rot} \
+        --query_gap_tolerance {wildcards.qgt} --query_overlap_tolerance {wildcards.qot} --max_edit_distance {wildcards.med} --sample HG002 --query_names"
+
+
+rule format_svim_haploid:
+    input:
+        "svim_hap{hap}/{chr}/{rgt}_{rot}_{qgt}_{qot}/variants.vcf"
+    output:
+        "calls/svim_haploid/{rgt}_{rot}_{qgt}_{qot}/{chr}.H{hap}.vcf.gz"
+    shell:
+        "bcftools view -i \"SVTYPE = 'INS' | SVTYPE = 'DEL'\" {input} | bgzip -c > {output}"
+
+
+rule format_svim_diploid:
+    input:
+        "svim_diploid/{chr}/{rgt}_{rot}_{qgt}_{qot}_{med}/variants.vcf"
+    output:
+        "calls/svim_diploid/{rgt}_{rot}_{qgt}_{qot}_{med}/{chr}.final.vcf.gz"
+    shell:
+        "bcftools view -i \"SVTYPE = 'INS' | SVTYPE = 'DEL'\" {input} | bgzip -c > {output}"
+
+
+# Call variants with paftools
+rule call_paftools:
+    input:
+        reference = config["reference"]["dir"] + "{chr}.fasta",
+        paf = "alignments/{chr}.H{hap}.paf"
+    output:
+        vcf = "calls/paftools/{chr}.H{hap}.raw.vcf.gz",
+        log = "logs/{chr}.H{hap}.paftools.log"
+    shell:
+        "sort -k6,6 -k8,8n {input.paf} | paftools.js call -f {input.reference} - 2> {output.log} | gzip > {output.vcf}"
+
+
+# Merge calls from the two haplotypes
+rule merge_haplotypes:
+    input:
+        hap1 = "calls/{tool}/{chr}.H1.vcf.gz",
+        hap1_index = "calls/{tool}/{chr}.H1.vcf.gz.tbi",
+        hap2 = "calls/{tool}/{chr}.H2.vcf.gz",
+        hap2_index = "calls/{tool}/{chr}.H2.vcf.gz.tbi",
+    output:
+        "calls/{tool}/{chr}.merged.vcf"
+    shell:
+        "bcftools merge --force-samples -m none {input.hap1} {input.hap2} > {output}"
+
+
+# Generate phased VCF
+rule phase_vcf_allchr:
+    input:
+        "calls/{tool}/{chr}.merged.vcf"
+    output:
+        "calls/{tool}/{chr}.final.vcf.gz"
+    shell:
+        "python scripts/vcf-pair.py {input} HG002 | bgzip -c > {output}"
+
+
+# Concatenate calls for different chromosomes
+rule concat_chromosomes:
+    input:
+        vcfs = expand("calls/{{tool}}/{chr}.final.vcf.gz", chr=range(1,23)),
+        indices = expand("calls/{{tool}}/{chr}.final.vcf.gz.tbi", chr=range(1,23))
+    output:
+        "calls/{tool}/genome_perchr.final.vcf.gz"
+    shell:
+        "bcftools concat -a {input.vcfs} > {output}"
+
+
+# Sort VCF
+rule sort_final_vcf:
+    input:
+        "calls/{tool}/{mode}.final.vcf.gz"
+    output:
+        "calls/{tool}/{mode,(genome|genome_perchr)}.final.sorted.vcf.gz"
+    shell:
+        "bcftools sort -O z {input} > {output}"
+
+
+########
+# EVAL #
+########
+
+
+# Run truvari
+rule truvari:
+    input:
+        reference = config["reference"]["dir"] + "genome.fasta",
+        truth = config["truth"]["vcf"],
+        regions = config["truth"]["bed"],
+        calls = "calls/{tool}/{mode}.final.sorted.vcf.gz",
+        index = "calls/{tool}/{mode}.final.sorted.vcf.gz.tbi"
+    output:
+        "truvari/{tool}/{mode,(genome|genome_perchr)}/summary.txt",
+        "truvari/{tool}/{mode,(genome|genome_perchr)}/tp-call.vcf",
+        "truvari/{tool}/{mode,(genome|genome_perchr)}/tp-base.vcf",
+        "truvari/{tool}/{mode,(genome|genome_perchr)}/fp.vcf",
+        "truvari/{tool}/{mode,(genome|genome_perchr)}/fn.vcf"
+    params:
+        out_dir = "truvari/{tool}/{mode}"
+    shell:
+        "rm -rf {params.out_dir} && truvari -f {input.reference} -b {input.truth} --includebed {input.regions} -o {params.out_dir} --giabreport --passonly -r 1000 -p 0.00 -c {input.calls}"
+
+
+rule truvari_multimatch:
+    input:
+        reference = config["reference"]["dir"] + "genome.fasta",
+        truth = config["truth"]["vcf"],
+        regions = config["truth"]["bed"],
+        calls = "calls/{tool}/{mode}.final.sorted.vcf.gz",
+        index = "calls/{tool}/{mode}.final.sorted.vcf.gz.tbi"
+    output:
+        "truvari_multimatch/{tool}/{mode,(genome|genome_perchr)}/summary.txt",
+        "truvari_multimatch/{tool}/{mode,(genome|genome_perchr)}/tp-call.vcf",
+        "truvari_multimatch/{tool}/{mode,(genome|genome_perchr)}/tp-base.vcf",
+        "truvari_multimatch/{tool}/{mode,(genome|genome_perchr)}/fp.vcf",
+        "truvari_multimatch/{tool}/{mode,(genome|genome_perchr)}/fn.vcf"
+    params:
+        out_dir = "truvari_multimatch/{tool}/{mode}"
+    shell:
+        "rm -rf {params.out_dir} && truvari -f {input.reference} -b {input.truth} --includebed {input.regions} -o {params.out_dir} --giabreport --passonly --multimatch -r 1000 -p 0.00 -c {input.calls}"
+
+
+rule generate_calls_outside_regions:
+    input:
+        calls = "calls/{tool}/{mode}.final.sorted.vcf.gz",
+        index = "calls/{tool}/{mode}.final.sorted.vcf.gz.tbi",
+        regions = config["truth"]["bed"]
+    output:
+        "{truvari,(truvari|truvari_multimatch)}/{tool}/{mode,(genome|genome_perchr)}_outside/outside-call.vcf"
+    shell:
+        "(zgrep \"#\" {input.calls} && bedtools intersect -v -f 1.0 -a {input.calls} -b {input.regions}) | bcftools view -i 'ABS(STRLEN(REF)-STRLEN(ALT))>=50 & ABS(STRLEN(REF)-STRLEN(ALT))<=50000 & FILTER==\"PASS\"' > {output}"
+
+
+rule generate_base_outside_regions:
+    input:
+        base = config["truth"]["vcf"],
+        regions = config["truth"]["bed"]
+    output:
+        "{truvari,(truvari|truvari_multimatch)}/{tool}/{mode,(genome|genome_perchr)}_outside/outside-base.vcf"
+    shell:
+        "(zgrep \"#\" {input.base} && bedtools intersect -v -f 1.0 -a {input.base} -b {input.regions}) | bcftools view -i 'ABS(STRLEN(REF)-STRLEN(ALT))>=50 & ABS(STRLEN(REF)-STRLEN(ALT))<=50000 & FILTER==\"PASS\"' > {output}"
+
+
+rule annotate_repeats:
+    input:
+        vcf = "{name}.sorted.vcf",
+        conf = "conf.toml"
+    output:
+        "{name}.annotated.vcf"
+    shell:
+        "vcfanno_linux64 {input.conf} {input.vcf} > {output}"
+
+
+rule plot:
+    input:
+        "{path}/tp-call.annotated.vcf",
+        "{path}/tp-base.annotated.vcf",
+        "{path}/fp.annotated.vcf",
+        "{path}/fn.annotated.vcf",
+        "{path}_outside/outside-call.annotated.vcf",
+        "{path}_outside/outside-base.annotated.vcf" 
+    output:
+        "{path}/size_reps.png"
+    shell:
+        "python3 scripts/truvari_by_size.py {wildcards.path} {output}"

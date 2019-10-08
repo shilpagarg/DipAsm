@@ -1,0 +1,15 @@
+reads_bam:
+    /path/to/pooled.bam
+
+reference:
+    dir: reference/
+
+assemblies:
+    path: assemblies/chr{chr}_RaGOO-p_ctg_cns-H{hap}.fa
+
+truth:
+    vcf: confidence_calls/chr/merged.vcf
+    bed: confidence_calls/HG002_SVs_Tier1_v0.6.bed
+
+tools:
+    sam-flt: /path/to/sam-flt.js
