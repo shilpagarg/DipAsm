@@ -5,7 +5,7 @@ channels:
   - defaults
 dependencies:
   - bcftools=1.9=ha228f0b_4
-  - biopython=1.73=py37h14c3975_0
+  - biopython=1.73
   - bwa=0.7.17=h84994c4_5
   - bz2file=0.98=py_0
   - bzip2=1.0.6=h14c3975_1002
@@ -16,22 +16,22 @@ dependencies:
   - htslib=1.9=ha228f0b_7
   - krb5=1.16.3=h05b26f9_1001
   - ldc=1.10.0=hb2c9046_0
-  - libblas=3.8.0=7_openblas
-  - libcblas=3.8.0=7_openblas
+  - libblas=3.8.0
+  - libcblas=3.8.0
   - libcurl=7.64.1=hda55be3_0
   - libdeflate=1.0=h14c3975_1
   - libedit=3.1.20170329=hf8c457e_1001
   - libffi=3.2.1=he1b5a44_1006
   - libgcc-ng=9.1.0=hdf63c60_0
   - libgfortran=3.0.0=1
-  - liblapack=3.8.0=7_openblas
+  - liblapack=3.8.0
   - libssh2=1.8.2=h22169c7_2
   - libstdcxx-ng=9.1.0=hdf63c60_0
   - minimap2=2.17=h84994c4_0
   - ncurses=6.1=hf484d3e_1002
   - networkx=2.3=py_0
   - numpy=1.16.4=py37h95a1406_0
-  - openblas=0.3.5=ha44fe06_0
+  - openblas=0.3.6
   - openssl=1.1.1b=h14c3975_1
   - parallel=20190522=0
   - perl=5.26.2=h516909a_1006
