@@ -2,18 +2,13 @@
 
 HICPATH=$(readlink -f $1)
 PBPATH=$(readlink -f $2)
-ASM=$(readlink -f $3)
-RAGOO=$4
-REF=$5
-SAMPLE=$6
-FEMALE=$7
-PREF=$8
+SAMPLE=$3
+FEMALE=$4
+PREF=$5
 
 SCRIPTPATH=$(readlink -f $0)
 SCRIPTPATH=${SCRIPTPATH%/*}
 
-echo Using reference: $REF
-# echo Using assembly: $ASM
 echo Using PacBioCCS data saved at: $PBPATH "All .fastq files here will be used"
 echo Using Hi-C data saved at: $HICPATH "All *1.fastq and *2.fastq files here will be used"
 echo Sample name: $SAMPLE
@@ -31,38 +26,22 @@ cd alignment
 cd ../
 [ -d hapcut2 ] || mkdir -p hapcut2
 [ -d whatshap ] || mkdir -p whatshap
-[ -d hapcut2Only ] || mkdir -p hapcut2Only
 [ -d haplotag ] || mkdir -p haplotag
-[ -d compare ] || mkdir -p compare
-[ -d ref ] || mkdir -p ref
 
-echo RAGOO $RAGOO
-if [ $RAGOO != 'FALSE' ] ; then
-    echo DOING RAGOO
-    for i in $PBPATH/*f*q
-    do
-      seqtk seq -A $i >> alignment/pacbioccs/pacbioccs.fasta;
-    done
-    echo Running RaGOO
-    mkdir -p ragoo
-    cd ragoo
-    ln -s $SCRIPTPATH/$REF
-    ln -s $SCRIPTPATH/$RAGOO
-    echo "python $SCRIPTPATH/tools/RaGOO/ragoo.py -t 96 -s -C -T corr -R ../alignment/pacbioccs/pacbioccs.fasta ${RAGOO##*/} ${REF##*/} 1> ragoo1.log 2> ragoo2.log"
-    time python $SCRIPTPATH/tools/RaGOO/ragoo.py -t 96 -s -C -T corr -R ../alignment/pacbioccs/pacbioccs.fasta ${RAGOO##*/} ${REF##*/} 1> ragoo1.log 2> ragoo2.log
-    cd ../
-    mv ragoo/ragoo_output/ragoo.fasta ref/
-    REF=ref/ragoo.fasta
-else
-    echo NOT DOING RAGOO
-    cd ref
-    # ln -s $ASM
-    cd ../
-    REF=ref/${ASM##*/}
-fi
 
-# TODO change the assembly sequence name
+[ -d peregrine ] || mkdir -p peregrine
 
+
+cd peregrine
+find $PBPATH/ -name "*.fastq" | sort > ${SAMPLE}.lst
+conda activate peregrine
+pg_run.py asm ${SAMPLE}.lst 24 24 24 24 24 24 24 24 24 --with-consensus --shimmer-r 3 --best_n_ovlp 8 
+     --output ${SAMPLE}_all_asm-r3-pg0.1.5.3
+
+cd ..
+conda deactivate
+
+exit
 \time -v bwa index -a bwtsw $REF 2> bwa.index.log &
 $SCRIPTPATH/pacbioccs.sh $PBPATH $REF $SAMPLE
 wait
