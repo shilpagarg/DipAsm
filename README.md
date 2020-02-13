@@ -19,8 +19,6 @@ optional arguments:
                      used.
   --sample NAME      Sample name to put for Read Group of BAM and Sample of
                      VCF.
-  --female           When sample is a female, specify this to also do phasing
-                     on chrX.
   --prefix STR       Prefix name for the experiment, for example "refBased",
                      "ragooBased".
 
