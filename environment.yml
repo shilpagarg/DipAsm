@@ -53,4 +53,8 @@ dependencies:
   - xopen=0.7.2=py_0
   - xz=5.2.4=h14c3975_1001
   - zlib=1.2.11=h14c3975_1004
+  - lastz=1.0.4
+  - coreutils=8.25
+  - scipy=1.4.1
+  - matplotlib=3.1.3
 

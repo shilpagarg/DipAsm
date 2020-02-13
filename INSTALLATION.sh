@@ -20,14 +20,17 @@ wget https://github.com/gt1/biobambam2/releases/download/2.0.87-release-20180301
 
 tar -xvzf biobambam2-2.0.87-release-20180301132713-x86_64-etch-linux-gnu.tar.gz
 
-cd ..
+git clone https://github.com/theaidenlab/3d-dna.git
 
+cd ..
+# conda version: 4.7.5
 conda env create -n whdenovo -f environment.yml
+
 conda activate whdenovo
-conda deactivate
+bash ./tools/3d-dna/run-asm-pipeline.sh
 
 conda env create -n dv -f dv.yml
-conda activate dv
-conda deactivate
+
+
 
 
