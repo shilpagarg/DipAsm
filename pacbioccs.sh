@@ -12,7 +12,7 @@ samtools faidx $REF
 
 echo Minimap2
 
-\time -v minimap2 -a -k 19 -O 5,56 -E 4,1 -B 5 -z 400,50 -r 2k -t 72 -R "@RG\tSM:$SAMPLE\tID:$SAMPLE" --eqx --secondary=no $REF $PBPATH/*.f*q 2> minimap2.pacbioccs.log | samtools sort -@72 -m2g --output-fmt BAM -o alignment/pacbioccs/pacbioccs.bam
+\time -v minimap2 -a -k 19 -O 5,56 -E 4,1 -B 5 -z 400,50 -r 2k -t 72 -R "@RG\tSM:$SAMPLE\tID:$SAMPLE" --eqx --secondary=no $REF $PBPATH/*.f*q 2> minimap2.pacbioccs.log | samtools sort -@72 --output-fmt BAM -o alignment/pacbioccs/pacbioccs.bam
 samtools index -@72 alignment/pacbioccs/pacbioccs.bam
 
 [ -d alignment/pacbioccs/split ] || mkdir -p alignment/pacbioccs/split
@@ -24,7 +24,7 @@ cut -d$'\t' -f1 ${REF}.fai | parallel -j4 'samtools index -@16 alignment/pacbioc
 [ -d alignment/pacbioccs/vcf ] || mkdir -p alignment/pacbioccs/vcf
 
 echo DeepVariant.....
-cut -d$'\t' -f1 ${REF}.fai | parallel -j5 '$SCRIPTPATH/dv.sh $PWD {} ${REF}'
+cut -d$'\t' -f1 ${REF}.fai | parallel -j5 '$SCRIPTPATH/dv.sh $PWD {}'
 
 ls alignment/pacbioccs/vcf/*gz | parallel 'bgzip -cd {} > {.}'
 ls alignment/pacbioccs/vcf/*vcf | parallel "grep -E '^#|0/0|1/1|0/1|1/0|0/2|2/0' {} > {.}.filtered.vcf"

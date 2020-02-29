@@ -10,6 +10,7 @@ export REF
 
 echo HapCUT2 phasing
 
+
 \time -v parallel 'extractHAIRS --bam $HIC/hic.{}.bam --hic 1 --VCF $VCF/pacbioccs.{}.filtered.vcf --out hapcut2/hic.{}.frag --maxIS 30000000 2> hapcut2/extractHAIRS.{}.log' ::: $SCAFFOLDS 2> extractHAIRS.log
 \time -v parallel 'HAPCUT2 --fragments hapcut2/hic.{}.frag --VCF $VCF/pacbioccs.{}.filtered.vcf --output hapcut2/hic.{}.hap --hic 1 2> hapcut2/HAPCUT2.{}.log' ::: $SCAFFOLDS  2> HAPCUT2.log
 parallel "cut -d$'\t' -f1-11 hapcut2/hic.{}.hap > hapcut2/hic.{}.hap.cut" ::: $SCAFFOLDS
@@ -24,6 +25,7 @@ parallel 'tabix -p vcf whatshap/pacbioccs.hic.{}.whatshap.phased.vcf.gz' ::: $SC
 
 parallel 'whatshap haplotag --reference $REF whatshap/pacbioccs.hic.{}.whatshap.phased.vcf.gz alignment/pacbioccs/split/pacbioccs.{}.bam -o haplotag/$SAMPLE.pacbioccs.hic.{}.haplotag.bam 2> haplotag/haplotag.{}.log' ::: $SCAFFOLDS  2> haplotag.log
 
+exit
 [ -d largestBlock_vcf ] || mkdir -p largestBlock_vcf
 [ -d largestBlock_haplotagBAM ] || mkdir -p largestBlock_haplotagBAM
 

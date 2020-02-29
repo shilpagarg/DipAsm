@@ -34,21 +34,21 @@ cd ../
 
 cd peregrine
 find $PBPATH/ -name "*.fastq" | sort > ${SAMPLE}.lst
-conda activate peregrine
-pg_run.py asm ${SAMPLE}.lst 24 24 24 24 24 24 24 24 24 --with-consensus --shimmer-r 3 --best_n_ovlp 8 
-     --output ${SAMPLE}_all_asm-r3-pg0.1.5.3
+eval "$(conda shell.bash hook)"
+conda activate peregrine #Do manually if didn't work
+pg_run.py asm ${SAMPLE}.lst 24 24 24 24 24 24 24 24 24 --with-consensus --shimmer-r 3 --best_n_ovlp 8 --output asm-r3-pg0.1.5.3 1> pere.log
 
+# Say yes here to license
 cd ..
 conda deactivate
 
-exit
-\time -v bwa index -a bwtsw $REF 2> bwa.index.log &
-$SCRIPTPATH/pacbioccs.sh $PBPATH $REF $SAMPLE
+REF="$PWD/peregrine/asm-r3-pg0.1.5.3/p_ctg_cns.fa"
+\time -v bwa index -a bwtsw $PWD/peregrine/asm-r3-pg0.1.5.3/p_ctg_cns.fa 2> bwa.index.log &
+$SCRIPTPATH/pacbioccs.sh $PBPATH $REF $SAMPLE > ccs.log 2>&1
 wait
-
-$SCRIPTPATH/hic.sh $HICPATH $REF $SAMPLE
-
-$SCRIPTPATH/phase.sh $REF $SAMPLE &
+$SCRIPTPATH/hic.sh $HICPATH $REF $SAMPLE > hic.log 2>&1
+$SCRIPTPATH/phase.sh $REF $SAMPLE & 2> phase.log
+exit
 $SCRIPTPATH/phase.hic_longread.sh $REF $SAMPLE
 wait
 

@@ -29,8 +29,21 @@ conda env create -n whdenovo -f environment.yml
 conda activate whdenovo
 bash ./tools/3d-dna/run-asm-pipeline.sh
 
+if ( ! sudo yum install -y docker ) ; then
 conda env create -n dv -f dv.yml
+echo \"sudo yum install -y docker\" failed, trying apt-get;
+conda activate dv
+if ( ! sudo apt-get install --yes docker ); then
+conda deactivate
+echo \"sudo apt-get install --yes docker\" failed.;
+echo docker installation failed;
+echo If you have docker intalled, run \"sudo systemctl start docker\" to activate it.
+exit;
+fi
+fi
 
+
+sudo systemctl start docker
 
 
 
