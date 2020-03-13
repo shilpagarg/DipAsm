@@ -1,4 +1,4 @@
-# WHdenovo
+# DipAsm
 A fast and accurate diploid assembly pipeline for human genomes.
 
 ### Environment Setup
