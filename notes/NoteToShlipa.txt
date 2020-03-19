@@ -1,0 +1,23 @@
+1. using the python code (pipeline.py) to call subprocess shell may messup shell environment, at least DV docker won't run proper in my test
+2. As Shilpa code have many hard-coded relative paths to the excutables, please follow the following exactly
+```
+mkdir -p /wd/dipasm/
+git clone https://github.com/shilpagarg/DipAsm.git
+# swith to a proper brach in nessary
+cd /wd/dipasm/DipAsm/docker
+docker build -t dipasm .
+cd /wd/dipasm/DipAsm
+docker run -it --rm -v  /wd/dipasm/DipAsm:/wd/dipasm/DipAsm/ -v /var/run/docker.sock:/var/^Cn/docker.sock dipasm:latest /bin/bash
+```
+note the mountpint setting "-v  /wd/dipasm/DipAsm:/wd/dipasm/DipAsm/"
+and "-v /var/run/docker.sock:/var/^Cn/docker.sock".
+
+Both should be followed exactly as-is. The second one make it possible to call another docker container (in this case DV) inside 
+the docker container. The first is also important to DV. When one excutate docker container insider a docker container, the 
+new container acutally see the host file system not the contatiner file system
+
+2. test run with docker
+In the container:
+
+cd /wd/dipasm/DipAsm
+bash test.sh | bash
