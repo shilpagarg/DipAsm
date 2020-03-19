@@ -1,3 +1,4 @@
+#!/bin/bash
 PBPATH=$1
 REF=$2
 SAMPLE=$3
@@ -7,7 +8,11 @@ PWD=`pwd`
 #source activate pipeline
 export SCRIPTPATH
 export PWD
+export LD_LIBRARY_PATH=/usr/local/lib/
 
+set -ex 
+
+which samtools
 samtools faidx $REF
 
 echo Minimap2
@@ -24,6 +29,7 @@ cut -d$'\t' -f1 ${REF}.fai | parallel -j4 'samtools index -@16 alignment/pacbioc
 [ -d alignment/pacbioccs/vcf ] || mkdir -p alignment/pacbioccs/vcf
 
 echo DeepVariant.....
+pwd
 cut -d$'\t' -f1 ${REF}.fai | parallel -j5 '$SCRIPTPATH/dv.sh $PWD {}'
 
 ls alignment/pacbioccs/vcf/*gz | parallel 'bgzip -cd {} > {.}'

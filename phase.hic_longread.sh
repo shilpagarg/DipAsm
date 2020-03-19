@@ -1,3 +1,4 @@
+#!/bin/bash
 HIC=alignment/hic/split
 PB=alignment/pacbioccs/split
 VCF=alignment/pacbioccs/vcf
@@ -10,6 +11,11 @@ export VCF
 export SAMPLE
 export REF
 mkdir hapcut2Only/
+export LD_LIBRARY_PATH=/usr/local/lib/
+export PATH=$PATH:/usr/local/bin
+set -ex
+
+mkdir -p ref/
 parallel 'samtools faidx $REF {} > ref/{}.fasta' ::: $SCAFFOLDS
 parallel 'samtools faidx ref/{}.fasta' ::: $SCAFFOLDS
 \time -v parallel 'extractHAIRS --bam $HIC/hic.{}.bam --hic 1 --VCF $VCF/pacbioccs.{}.filtered.vcf --out hapcut2Only/hic.{}.frag 2> hapcut2Only/extractHAIRS.{}.hic.log' ::: $SCAFFOLDS 2> hapcut2Only/extractHAIRS.hic.log

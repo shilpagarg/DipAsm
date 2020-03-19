@@ -7,7 +7,7 @@ echo $PAT
 
 #short=`echo $SCAFF | cut -d';' -f1 | cut -d'.' -f2`
 #echo $short
-sudo docker run \
+docker run \
   -v "${INPUT_DIR}":"/input" \
   -v "${OUTPUT_DIR}":"/output" \
   gcr.io/deepvariant-docker/deepvariant:"${BIN_VERSION}" \

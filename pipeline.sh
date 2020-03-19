@@ -1,5 +1,6 @@
-#!/bin/sh
-
+#!/bin/bash
+set -ex
+#. /opt/conda/bin/activate
 HICPATH=$(readlink -f $1)
 PBPATH=$(readlink -f $2)
 SAMPLE=$3
@@ -36,22 +37,30 @@ cd peregrine
 find $PBPATH/ -name "*.fastq" | sort > ${SAMPLE}.lst
 eval "$(conda shell.bash hook)"
 conda activate peregrine #Do manually if didn't work
-pg_run.py asm ${SAMPLE}.lst 24 24 24 24 24 24 24 24 24 --with-consensus --shimmer-r 3 --best_n_ovlp 8 --output asm-r3-pg0.1.5.3 1> pere.log
+echo pg_run.py asm ${SAMPLE}.lst 24 24 24 24 24 24 24 24 24 --with-consensus --shimmer-r 3 --best_n_ovlp 8 --output asm-r3-pg0.1.5.3 1> pere.log
+echo yes | pg_run.py asm ${SAMPLE}.lst 24 24 24 24 24 24 24 24 24 --with-consensus --shimmer-r 3 --best_n_ovlp 8 --output asm-r3-pg0.1.5.3 1> pere.log
 
 # Say yes here to license
 cd ..
 conda deactivate
 
+echo peregrine assembly done
 REF="$PWD/peregrine/asm-r3-pg0.1.5.3/p_ctg_cns.fa"
-\time -v bwa index -a bwtsw $PWD/peregrine/asm-r3-pg0.1.5.3/p_ctg_cns.fa 2> bwa.index.log &
-$SCRIPTPATH/pacbioccs.sh $PBPATH $REF $SAMPLE > ccs.log 2>&1
+ls -l $REF
+conda activate whdenovo
+/usr/bin/time -v bwa index -a bwtsw $PWD/peregrine/asm-r3-pg0.1.5.3/p_ctg_cns.fa 2> bwa.index.log &
+pwd
+echo Run pacbioccs.sh: "$SCRIPTPATH/pacbioccs.sh $PBPATH $REF $SAMPLE" 
+$SCRIPTPATH/pacbioccs.sh $PBPATH $REF $SAMPLE  #> ccs.log 2>&1
 wait
 $SCRIPTPATH/hic.sh $HICPATH $REF $SAMPLE > hic.log 2>&1
+wait
 $SCRIPTPATH/phase.sh $REF $SAMPLE & 2> phase.log
-exit
+wait
 $SCRIPTPATH/phase.hic_longread.sh $REF $SAMPLE
 wait
 
 SCAFFOLDS=`cut -d$'\t' -f1 ${REF}.fai`
+mkdir -p compare
 
 parallel 'whatshap compare --only-snvs --tsv-pairwise compare/compare.{}.tsv --longest-block-tsv compare/compare.{}.block.tsv hapcut2Only/hic.pb.{}.phased.vcf whatshap/pacbioccs.hic.{}.whatshap.phased.vcf > compare/compare.{}.log 2>&1' ::: $SCAFFOLDS

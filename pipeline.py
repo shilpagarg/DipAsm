@@ -22,13 +22,14 @@ else:
     female = 'FALSE'
 commands = [args.hic_path, args.pb_path, args.sample, female, args.prefix]
 commands = './pipeline.sh ' + ' '.join(commands)
-process = subprocess.Popen(commands, shell = True, stdout=subprocess.PIPE)
-comm = process.communicate()
-stdout = comm[0].decode()
+print(commands)
+#process = subprocess.Popen(commands, shell = True, stdout=subprocess.PIPE)
+#comm = process.communicate()
+#stdout = comm[0].decode()
 
 #stderr = comm[1].decode()
 #sys.stderr.write('STDERR:::\n')
 #sys.stderr.write(stderr+'\n')
 
-sys.stdout.write('STDOUT:::\n')
-sys.stdout.write(stdout+'\n')
+#sys.stdout.write('STDOUT:::\n')
+#sys.stdout.write(stdout+'\n')
