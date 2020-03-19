@@ -9,12 +9,12 @@ docker build -t dipasm .
 cd /wd/dipasm/DipAsm
 docker run -it --rm -v  /wd/dipasm/DipAsm:/wd/dipasm/DipAsm/ -v /var/run/docker.sock:/var/^Cn/docker.sock dipasm:latest /bin/bash
 ```
-note the mountpint setting "-v  /wd/dipasm/DipAsm:/wd/dipasm/DipAsm/"
+note the mount point setting "-v  /wd/dipasm/DipAsm:/wd/dipasm/DipAsm/"
 and "-v /var/run/docker.sock:/var/^Cn/docker.sock".
 
 Both should be followed exactly as-is. The second one make it possible to call another docker container (in this case DV) inside 
 the docker container. The first is also important to DV. When one excutate docker container insider a docker container, the 
-new container acutally see the host file system not the contatiner file system
+new container actually see the host file system not the contatiner file system
 
 2. test run with docker
 In the container:
