@@ -7,12 +7,13 @@ See our preprint here: [https://doi.org/10.1101/810341](https://doi.org/10.1101/
 ## Installation
 ```
 mkdir -p /wd/dipasm/
+cd /wd/dipasm/
 git clone https://github.com/shilpagarg/DipAsm.git
 # swith to a proper brach in nessary
 cd /wd/dipasm/DipAsm/docker
 docker build -t dipasm .
 cd /wd/dipasm/DipAsm
-docker run -it --rm -v  /wd/dipasm/DipAsm:/wd/dipasm/DipAsm/ -v /var/run/docker.sock:/var/^Cn/docker.sock dipasm:latest /bin/bash
+docker run -it --rm -v  /wd/dipasm/DipAsm:/wd/dipasm/DipAsm/ -v /var/run/docker.sock:/var/run/docker.sock dipasm:latest /bin/bash
 ```
 
 ## Test example with docker
