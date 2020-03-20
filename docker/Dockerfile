@@ -23,6 +23,10 @@ RUN tar -xvzf biobambam2-2.0.87-release-20180301132713-x86_64-etch-linux-gnu.tar
 RUN apt-get install -y libbz2-dev liblzma-dev libcurl4-gnutls-dev
 RUN wget https://github.com/samtools/htslib/releases/download/1.10.2/htslib-1.10.2.tar.bz2
 RUN tar jxvf htslib-1.10.2.tar.bz2 && cd htslib-1.10.2 && make && make install
+RUN ldconfig /usr/local/lib
 RUN cd HapCUT2 && make
+RUN cp /tools/HapCUT2/build/extractHAIRS /usr/local/bin
+RUN cp /tools/HapCUT2/build/HAPCUT2 /usr/local/bin
+RUN parallel --citation
 #run INSTALLATION.sh to install dependencies in Docker
 #RUN chmod +x /INSTALLATION.sh && /INSTALLATION.sh
