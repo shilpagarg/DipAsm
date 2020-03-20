@@ -13,8 +13,8 @@ set -ex
 
 echo HapCUT2 phasing
 
-\time -v parallel '/tools/HapCUT2/build/extractHAIRS --bam $HIC/hic.{}.bam --hic 1 --VCF $VCF/pacbioccs.{}.filtered.vcf --out hapcut2/hic.{}.frag --maxIS 30000000 2> hapcut2/extractHAIRS.{}.log' ::: $SCAFFOLDS 2> extractHAIRS.log
-\time -v parallel '/tools/HapCUT2/build/HAPCUT2 --fragments hapcut2/hic.{}.frag --VCF $VCF/pacbioccs.{}.filtered.vcf --output hapcut2/hic.{}.hap --hic 1 2> hapcut2/HAPCUT2.{}.log' ::: $SCAFFOLDS  2> HAPCUT2.log
+\time -v parallel 'extractHAIRS --bam $HIC/hic.{}.bam --hic 1 --VCF $VCF/pacbioccs.{}.filtered.vcf --out hapcut2/hic.{}.frag --maxIS 30000000 2> hapcut2/extractHAIRS.{}.log' ::: $SCAFFOLDS 2> extractHAIRS.log
+\time -v parallel 'HAPCUT2 --fragments hapcut2/hic.{}.frag --VCF $VCF/pacbioccs.{}.filtered.vcf --output hapcut2/hic.{}.hap --hic 1 2> hapcut2/HAPCUT2.{}.log' ::: $SCAFFOLDS  2> HAPCUT2.log
 parallel "cut -d$'\t' -f1-11 hapcut2/hic.{}.hap > hapcut2/hic.{}.hap.cut" ::: $SCAFFOLDS
 parallel 'whatshap hapcut2vcf $VCF/pacbioccs.{}.filtered.vcf hapcut2/hic.{}.hap.cut -o hapcut2/hic.{}.phased.vcf' ::: $SCAFFOLDS
 
