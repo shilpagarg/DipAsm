@@ -57,10 +57,3 @@ $SCRIPTPATH/hic.sh $HICPATH $REF $SAMPLE > hic.log 2>&1
 wait
 $SCRIPTPATH/phase.sh $REF $SAMPLE & 2> phase.log
 wait
-$SCRIPTPATH/phase.hic_longread.sh $REF $SAMPLE
-wait
-
-SCAFFOLDS=`cut -d$'\t' -f1 ${REF}.fai`
-mkdir -p compare
-
-parallel 'whatshap compare --only-snvs --tsv-pairwise compare/compare.{}.tsv --longest-block-tsv compare/compare.{}.block.tsv hapcut2Only/hic.pb.{}.phased.vcf whatshap/pacbioccs.hic.{}.whatshap.phased.vcf > compare/compare.{}.log 2>&1' ::: $SCAFFOLDS
