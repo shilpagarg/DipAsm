@@ -27,6 +27,7 @@ RUN ldconfig /usr/local/lib
 RUN cd HapCUT2 && make
 RUN cp /tools/HapCUT2/build/extractHAIRS /usr/local/bin
 RUN cp /tools/HapCUT2/build/HAPCUT2 /usr/local/bin
-RUN parallel --citation
+RUN mkdir -p /root/.parallel
+RUN touch /root/.parallel/will-cite
 #run INSTALLATION.sh to install dependencies in Docker
 #RUN chmod +x /INSTALLATION.sh && /INSTALLATION.sh
