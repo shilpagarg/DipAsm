@@ -43,7 +43,7 @@ Example:
 python pipeline.py --hic-path data/hic --pb-path data/pacbiocss --sample PGP1 --prefix asm
 ```
 ## Results
-This pipeline produces phased reads in the folder `sample_output/prefix/haplotag/`. The phased reads are encoded using `HP` tag and include non-phased reads to both sets. On these phased sets, Peregrine should be run to produce phased contigs.
+This pipeline produces phased assemblies in the folder `sample_output/prefix/assemble/`.
 
 ## Acknowledgements
 Dependencies: Peregrine, minimap2, DeepVariant, whatshap and hapcut2
