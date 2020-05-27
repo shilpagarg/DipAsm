@@ -31,6 +31,7 @@ cd ../
 
 
 [ -d peregrine ] || mkdir -p peregrine
+[ -d assemble] || mkdir -p assemble
 
 
 cd peregrine
@@ -57,3 +58,24 @@ $SCRIPTPATH/hic.sh $HICPATH $REF $SAMPLE > hic.log 2>&1
 wait
 $SCRIPTPATH/phase.sh $REF $SAMPLE & 2> phase.log
 wait
+
+cp $PWD/haplotag/*.fasta $PBPATH/
+
+SCAFFOLDS=`cut -d$'\t' -f1 $REF.fai`
+
+cd assemble
+parallel "find $PBPATH/ -name "{}-SCAFF-H1.fasta" > {}-SCAFF-H1.lst" ::: $SCAFFOLDS
+parallel "find $PBPATH/ -name "{}-SCAFF-untagged.fasta" >> {}-SCAFF-H1.lst" ::: $SCAFFOLDS
+
+eval "$(conda shell.bash hook)"
+conda activate peregrine
+parallel 'echo yes | pg_run.py asm {}-SCAFF-H1.lst 24 24 24 24 24 24 24 24 24 --with-consensus --shimmer-r 3 --best_n_ovlp 8 --output {}-SCAFF-H1-asm-r3-pg0.1.5.3 1> pere.log' ::: $SCAFFOLDS
+
+
+
+parallel "find $PBPATH/ -name "{}-SCAFF-H2.fasta" > {}-SCAFF-H2.lst" ::: $SCAFFOLDS
+
+parallel "find $PBPATH/ -name "{}-SCAFF-untagged.fasta" > {}-SCAFF-H2.lst" ::: $SCAFFOLDS
+
+
+parallel 'echo yes | pg_run.py asm {}-SCAFF-H2.lst 24 24 24 24 24 24 24 24 24 --with-consensus --shimmer-r 3 --best_n_ovlp 8 --output {}-SCAFF-H2-asm-r3-pg0.1.5.3 1> pere.log' ::: $SCAFFOLDS

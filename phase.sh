@@ -27,6 +27,14 @@ parallel 'tabix -p vcf whatshap/pacbioccs.hic.{}.whatshap.phased.vcf.gz' ::: $SC
 
 parallel 'whatshap haplotag --reference $REF whatshap/pacbioccs.hic.{}.whatshap.phased.vcf.gz alignment/pacbioccs/split/pacbioccs.{}.bam -o haplotag/$SAMPLE.pacbioccs.hic.{}.haplotag.bam 2> haplotag/haplotag.{}.log' ::: $SCAFFOLDS  2> haplotag.log
 
+echo Assemble partitions
+parallel "samtools view haplotag/$SAMPLE.pacbioccs.hic.{}.haplotag.bam | grep "HP:i:1" | awk '{print \">\"\$1\"\n\"\$10}' > haplotag/{}-SCAFF-H1.fasta" ::: $SCAFFOLDS
+
+parallel "samtools view haplotag/$SAMPLE.pacbioccs.hic.{}.haplotag.bam | grep "HP:i:2" | awk '{print \">\"\$1\"\n\"\$10}' > haplotag/{}-SCAFF-H2.fasta" ::: $SCAFFOLDS
+
+parallel "samtools view haplotag/$SAMPLE.pacbioccs.hic.{}.haplotag.bam | grep -v "HP:" | awk '{print \">\"\$1\"\n\"\$10}' > haplotag/{}-SCAFF-untagged.fasta" ::: $SCAFFOLDS
+
+
 exit
 [ -d largestBlock_vcf ] || mkdir -p largestBlock_vcf
 [ -d largestBlock_haplotagBAM ] || mkdir -p largestBlock_haplotagBAM
