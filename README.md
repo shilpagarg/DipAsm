@@ -9,12 +9,11 @@ See our preprint here: [https://doi.org/10.1101/810341](https://doi.org/10.1101/
 mkdir -p $PWD/dipasm/
 pushd $PWD/dipasm/
 git clone https://github.com/shilpagarg/DipAsm.git
- swith to a proper brach in nessary
+# switch to a proper brach in nessary
 popd
 pushd $PWD/dipasm/DipAsm/docker
 docker build -t dipasm .
 popd
-pushd $PWD/dipasm/DipAsm
 docker run -it --rm -v  $PWD/dipasm/DipAsm:/wd/dipasm/DipAsm/ -e HOSTWD=$PWD/dipasm/DipAsm -v /var/run/docker.sock:/var/run/docker.sock dipasm:latest /bin/bash
 ```
 
