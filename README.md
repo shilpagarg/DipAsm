@@ -31,7 +31,7 @@ bash test.sh | bash
 ```
 ### Run
 
-Here is a brife description of the `pipeline.py` command:
+Here is a brief description of the `pipeline.py` command:
 
 ```
 usage: pipeline.py [-h] --hic-path PATH --pb-path PATH --sample NAME [--female]
