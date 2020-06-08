@@ -57,6 +57,6 @@ python pipeline.py --hic-path data/hic --pb-path data/pacbiocss --sample PGP1 --
 This pipeline produces phased assemblies in the folder `sample_output/prefix/assemble/`.
 
 ## Acknowledgements
-Dependencies: Peregrine, minimap2, DeepVariant, whatshap and hapcut2
+Dependencies: Peregrine, 3d-dna, minimap2, DeepVariant, whatshap and hapcut2
 
 
