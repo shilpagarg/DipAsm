@@ -6,22 +6,33 @@ See our preprint here: [https://doi.org/10.1101/810341](https://doi.org/10.1101/
 
 ## Installation
 ```
-mkdir -p /wd/dipasm/
-cd /wd/dipasm/
+mkdir -p $PWD/dipasm/
+pushd $PWD/dipasm/
 git clone https://github.com/shilpagarg/DipAsm.git
-# swith to a proper brach in nessary
-cd /wd/dipasm/DipAsm/docker
+ swith to a proper brach in nessary
+popd
+pushd $PWD/dipasm/DipAsm/docker
 docker build -t dipasm .
-cd /wd/dipasm/DipAsm
-docker run -it --rm -v  /wd/dipasm/DipAsm:/wd/dipasm/DipAsm/ -v /var/run/docker.sock:/var/run/docker.sock dipasm:latest /bin/bash
+popd
+pushd $PWD/dipasm/DipAsm
+docker run -it --rm -v  $PWD/dipasm/DipAsm:/wd/dipasm/DipAsm/ -e HOSTWD=$PWD/dipasm/DipAsm -v /var/run/docker.sock:/var/run/docker.sock dipasm:latest /bin/bash
 ```
 
+The `docker run -it` will start an interactive docker container session. You will be in
+the virtual container envrionment which have the preinstall DipAsm and testing data. 
+
+
 ## Test example with docker
+
+You can run the test for DipAsm within the docker container environment by:
+
 ```
 cd /wd/dipasm/DipAsm
 bash test.sh | bash
 ```
 ### Run
+
+Here is a brife description of the `pipeline.py` command:
 
 ```
 usage: pipeline.py [-h] --hic-path PATH --pb-path PATH --sample NAME [--female]
