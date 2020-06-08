@@ -9,7 +9,7 @@ See our preprint here: [https://doi.org/10.1101/810341](https://doi.org/10.1101/
 mkdir -p $PWD/dipasm/
 pushd $PWD/dipasm/
 git clone https://github.com/shilpagarg/DipAsm.git
-# switch to a proper brach in nessary
+# switch to a proper branch if necessary
 popd
 pushd $PWD/dipasm/DipAsm/docker
 docker build -t dipasm .
