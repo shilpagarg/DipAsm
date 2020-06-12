@@ -5,7 +5,11 @@ Haplotype-resolved or phased sequence assembly provides a complete picture of ge
 See our preprint here: [https://doi.org/10.1101/810341](https://doi.org/10.1101/810341).
 
 ## Installation
-```
+
+DipAsm requires [docker][dc] as [DeepVariant][dv] uses it. Users need to make
+sure docker is installed and the docker service is started.
+
+```sh
 mkdir -p dipasm
 cd dipasm
 git clone https://github.com/shilpagarg/DipAsm.git
@@ -23,19 +27,21 @@ the virtual container envrionment which have the preinstall DipAsm and testing d
 
 You can run the test for DipAsm within the docker container environment by:
 
-```
+```sh
 cd /wd/dipasm/DipAsm
 bash test.sh | bash
+ls test_output/out/assemble/*-SCAFF-H?*/*.fa  # final assembly
 ```
+
 ### Run
 
 Here is a brief description of the `pipeline.py` command:
 
 ```
-usage: pipeline.py [-h] --hic-path PATH --pb-path PATH --sample NAME [--female]
+Usage: pipeline.py [-h] --hic-path PATH --pb-path PATH --sample NAME [--female]
                    --prefix STR
 
-optional arguments:
+Optional arguments:
   -h, --help         show this help message and exit
   --hic-path PATH    Use Hi-C data from this path. Should be named by *1.fastq
                      and *2.fastq.
@@ -51,9 +57,20 @@ Example:
 python pipeline.py --hic-path data/hic --pb-path data/pacbiocss --sample PGP1 --prefix asm
 ```
 ## Results
-This pipeline produces phased assemblies in the folder `sample_output/prefix/assemble/`.
+
+This pipeline produces phased assemblies in the folder
+`sample_output/prefix/assemble/` where `*-SCAFF-H1*/*.fa` gives contigs on the
+first haplotype and `*-SCAFF-H2*/*.fa` gives the second haplotype.
 
 ## Acknowledgements
-Dependencies: Peregrine, 3d-dna, minimap2, DeepVariant, whatshap and hapcut2
 
+DipAsm depends on [Peregrine][pg], [3d-dna][3ddna], [minimap2][mm2],
+[DeepVariant][dv], [whatshap][wh] and [hapcut2][hc].
 
+[pg]: https://github.com/cschin/Peregrine
+[mm2]: https://github.com/lh3/minimap2
+[3ddna]: https://github.com/theaidenlab/3d-dna
+[dv]: https://github.com/google/deepvariant
+[wh]: https://bitbucket.org/whatshap/whatshap/src/master/
+[hc]: https://github.com/vibansal/HapCUT2
+[dc]: https://www.docker.com/
