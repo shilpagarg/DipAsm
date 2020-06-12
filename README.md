@@ -6,15 +6,13 @@ See our preprint here: [https://doi.org/10.1101/810341](https://doi.org/10.1101/
 
 ## Installation
 ```
-mkdir -p $PWD/dipasm/
-pushd $PWD/dipasm/
+mkdir -p dipasm
+cd dipasm
 git clone https://github.com/shilpagarg/DipAsm.git
-# switch to a proper branch if necessary
-popd
-pushd $PWD/dipasm/DipAsm/docker
+cd DipAsm/docker
 docker build -t dipasm .
-popd
-docker run -it --rm -v  $PWD/dipasm/DipAsm:/wd/dipasm/DipAsm/ -e HOSTWD=$PWD/dipasm/DipAsm -v /var/run/docker.sock:/var/run/docker.sock dipasm:latest /bin/bash
+cd ../../..
+docker run -it --rm -v $PWD/dipasm/DipAsm:/wd/dipasm/DipAsm/ -e HOSTWD=$PWD/dipasm/DipAsm -v /var/run/docker.sock:/var/run/docker.sock dipasm:latest /bin/bash
 ```
 
 The `docker run -it` will start an interactive docker container session. You will be in
