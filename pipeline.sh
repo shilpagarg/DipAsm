@@ -78,3 +78,5 @@ parallel "find $PBPATH/ -name "{}-SCAFF-untagged.fasta" >> {}-SCAFF-H2.lst" ::: 
 
 
 parallel 'echo yes | pg_run.py asm {}-SCAFF-H2.lst 24 24 24 24 24 24 24 24 24 --with-consensus --shimmer-r 3 --best_n_ovlp 8 --output {}-SCAFF-H2-asm-r3-pg0.1.5.3 1> pere.log' ::: $SCAFFOLDS
+
+find . -name p_ctg_cns.fa | $SCRIPTPATH/genfa.pl $SAMPLE
