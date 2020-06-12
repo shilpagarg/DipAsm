@@ -30,12 +30,14 @@ You can run the test for DipAsm within the docker container environment by:
 ```sh
 cd /wd/dipasm/DipAsm
 bash test.sh | bash
-ls test_output/out/assemble/*-SCAFF-H?*/*.fa  # final assembly
+ls test_output/out/assemble/test-H?.fasta  # final assembly
 ```
 
 ### Run
 
-Here is a brief description of the `pipeline.py` command:
+Once you enter the virtual Docker environment with the docker command line
+shown above, go into the `/wd/dipasm/DipAsm` directory and run `python
+pipeline.py`. You will see:
 
 ```
 Usage: pipeline.py [-h] --hic-path PATH --pb-path PATH --sample NAME [--female]
@@ -58,9 +60,7 @@ python pipeline.py --hic-path data/hic --pb-path data/pacbiocss --sample PGP1 --
 ```
 ## Results
 
-This pipeline produces phased assemblies in the folder
-`sample_output/prefix/assemble/` where `*-SCAFF-H1*/*.fa` gives contigs on the
-first haplotype and `*-SCAFF-H2*/*.fa` gives the second haplotype.
+This pipeline produces phased assemblies as `sample_output/prefix/assemble/sample-H?.fasta`.
 
 ## Acknowledgements
 
