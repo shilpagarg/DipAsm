@@ -16,9 +16,9 @@ RUN bash /tools/install_whdenovo.sh
 
 RUN apt-get install -y vim tree 
 RUN apt-get install -y docker.io
-RUN wget https://github.com/broadinstitute/picard/releases/download/2.20.2/picard.jar
+RUN wget --no-check-certificate https://github.com/broadinstitute/picard/releases/download/2.20.2/picard.jar
 RUN git clone https://github.com/shilpagarg/HapCUT2.git
-RUN wget https://github.com/gt1/biobambam2/releases/download/2.0.87-release-20180301132713/biobambam2-2.0.87-release-20180301132713-x86_64-etch-linux-gnu.tar.gz
+RUN wget --no-check-certificate https://github.com/gt1/biobambam2/releases/download/2.0.87-release-20180301132713/biobambam2-2.0.87-release-20180301132713-x86_64-etch-linux-gnu.tar.gz
 RUN tar -xvzf biobambam2-2.0.87-release-20180301132713-x86_64-etch-linux-gnu.tar.gz
 RUN apt-get install -y libbz2-dev liblzma-dev libcurl4-gnutls-dev
 RUN mkdir -p /root/.parallel
